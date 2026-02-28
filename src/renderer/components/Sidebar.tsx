@@ -19,9 +19,12 @@ interface SidebarProps {
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   return (
     <nav className="w-56 flex flex-col border-r bg-card">
-      <div className="px-4 py-5">
-        <h1 className="text-lg font-bold tracking-tight text-primary">AI Council</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Discussion orchestrator</p>
+      <div className="flex items-center gap-2.5 px-4 py-5">
+        <img src="./icon.png" alt="State Change" className="h-7 w-7 rounded" />
+        <div>
+          <h1 className="text-lg font-bold tracking-tight text-primary leading-tight">Council</h1>
+          <p className="text-xs text-muted-foreground">Discussion orchestrator</p>
+        </div>
       </div>
       <Separator />
       <div className="flex flex-col gap-1 p-2 mt-1">

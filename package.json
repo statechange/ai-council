@@ -9,6 +9,7 @@
     "council": "./dist/cli.js"
   },
   "files": [
+    "assets/",
     "dist/",
     "dist-electron/",
     "dist-renderer/",

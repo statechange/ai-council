@@ -1,5 +1,5 @@
-import { app, BrowserWindow, ipcMain, protocol, net } from "electron";
-import { join, dirname } from "node:path";
+import { app, BrowserWindow, ipcMain, protocol, net, Menu } from "electron";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { appendFileSync, writeFileSync } from "node:fs";
 import { registerIpcHandlers } from "./ipc-handlers.js";
@@ -15,7 +15,10 @@ function log(source: string, ...args: unknown[]) {
 }
 
 // Clear log on startup
-writeFileSync(logFile, `=== AI Council Electron — started ${new Date().toISOString()} ===\n`);
+writeFileSync(logFile, `=== State Change Council Electron — started ${new Date().toISOString()} ===\n`);
+
+// Set the app name so macOS menu bar shows "State Change Council" instead of "Electron"
+app.name = "State Change Council";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -27,7 +30,8 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    title: "AI Council",
+    title: "State Change Council",
+    icon: resolve(__dirname, "..", "assets", "icon.png"),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -78,6 +82,31 @@ protocol.registerSchemesAsPrivileged([
 
 app.whenReady().then(() => {
   log("main", "App ready, registering IPC handlers");
+
+  // Build the macOS application menu with the correct app name
+  // (Electron's default menu uses "Electron" unless we override it)
+  const appName = "State Change Council";
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: appName,
+      submenu: [
+        { role: "about", label: `About ${appName}` },
+        { type: "separator" },
+        { role: "services" },
+        { type: "separator" },
+        { role: "hide", label: `Hide ${appName}` },
+        { role: "hideOthers" },
+        { role: "unhide" },
+        { type: "separator" },
+        { role: "quit", label: `Quit ${appName}` },
+      ],
+    },
+    { role: "fileMenu" },
+    { role: "editMenu" },
+    { role: "viewMenu" },
+    { role: "windowMenu" },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
   // Handle council-file:// URLs by mapping them to local files
   protocol.handle("council-file", (request) => {

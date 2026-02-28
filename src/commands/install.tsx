@@ -3,9 +3,9 @@ import { Text } from "ink";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
-import { existsSync, mkdirSync, writeFileSync, chmodSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, chmodSync, rmSync, copyFileSync, symlinkSync } from "node:fs";
 
-const APP_PATH = "/Applications/AI Council.app";
+const APP_PATH = "/Applications/State Change Council.app";
 
 interface Props {
   uninstall?: boolean;
@@ -13,19 +13,23 @@ interface Props {
 
 export function InstallCommand({ uninstall }: Props) {
   const [status, setStatus] = useState<string>(
-    uninstall ? "Removing AI Council..." : "Installing AI Council...",
+    uninstall ? "Removing State Change Council..." : "Installing State Change Council...",
   );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (uninstall) {
+      // Also remove legacy name
+      if (existsSync("/Applications/AI Council.app")) {
+        try { rmSync("/Applications/AI Council.app", { recursive: true, force: true }); } catch {}
+      }
       if (!existsSync(APP_PATH)) {
-        setStatus("AI Council is not installed in /Applications.");
+        setStatus("State Change Council is not installed in /Applications.");
         return;
       }
       try {
         rmSync(APP_PATH, { recursive: true, force: true });
-        setStatus("AI Council removed from /Applications.");
+        setStatus("State Change Council removed from /Applications.");
       } catch (err: any) {
         setError(`Failed to remove ${APP_PATH}: ${err.message}`);
       }
@@ -33,7 +37,6 @@ export function InstallCommand({ uninstall }: Props) {
     }
 
     async function install() {
-      // Install flow
       const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
       const mainJs = resolve(pkgRoot, "dist-electron/main.js");
 
@@ -45,29 +48,35 @@ export function InstallCommand({ uninstall }: Props) {
         return;
       }
 
-      // Verify electron is available
-      let electronPath: string | null = null;
-      try {
-        const { createRequire } = await import("node:module");
-        const req = createRequire(import.meta.url);
-        electronPath = req("electron") as unknown as string;
-      } catch {
-        // not installed locally
+      // Find the Electron.app bundle
+      let electronAppDir: string | null = null;
+
+      // Method 1: project-local node_modules
+      const localElectronApp = resolve(pkgRoot, "node_modules/electron/dist/Electron.app");
+      if (existsSync(localElectronApp)) {
+        electronAppDir = localElectronApp;
       }
-      if (!electronPath) {
+
+      // Method 2: npm global modules
+      if (!electronAppDir) {
         try {
-          electronPath = execSync("which electron", { encoding: "utf-8" }).trim();
-        } catch {
-          // not in PATH
-        }
+          const npmRoot = execSync("npm root -g", { encoding: "utf-8" }).trim();
+          const globalElectronApp = resolve(npmRoot, "electron/dist/Electron.app");
+          if (existsSync(globalElectronApp)) {
+            electronAppDir = globalElectronApp;
+          }
+        } catch {}
       }
-      if (!electronPath) {
+
+      if (!electronAppDir) {
         setError(
-          "The GUI requires Electron. Install it with:\n\n" +
+          "Could not find Electron.app bundle. Install Electron with:\n\n" +
             "  npm install -g electron\n",
         );
         return;
       }
+
+      const electronBin = resolve(electronAppDir, "Contents/MacOS/Electron");
 
       // Build the .app structure
       const contentsDir = resolve(APP_PATH, "Contents");
@@ -75,8 +84,19 @@ export function InstallCommand({ uninstall }: Props) {
       const resourcesDir = resolve(contentsDir, "Resources");
 
       try {
+        // Clean previous install
+        if (existsSync(APP_PATH)) {
+          rmSync(APP_PATH, { recursive: true, force: true });
+        }
+
         mkdirSync(macosDir, { recursive: true });
         mkdirSync(resourcesDir, { recursive: true });
+
+        // Copy icon if available
+        const icnsPath = resolve(pkgRoot, "assets/icon.icns");
+        if (existsSync(icnsPath)) {
+          copyFileSync(icnsPath, resolve(resourcesDir, "icon.icns"));
+        }
 
         // Info.plist
         const plist = `<?xml version="1.0" encoding="UTF-8"?>
@@ -84,9 +104,9 @@ export function InstallCommand({ uninstall }: Props) {
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key>
-  <string>AI Council</string>
+  <string>State Change Council</string>
   <key>CFBundleDisplayName</key>
-  <string>AI Council</string>
+  <string>State Change Council</string>
   <key>CFBundleIdentifier</key>
   <string>com.statechange.council</string>
   <key>CFBundleVersion</key>
@@ -94,46 +114,49 @@ export function InstallCommand({ uninstall }: Props) {
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleExecutable</key>
-  <string>ai-council</string>
+  <string>council</string>
+  <key>CFBundleIconFile</key>
+  <string>icon</string>
 </dict>
 </plist>`;
         writeFileSync(resolve(contentsDir, "Info.plist"), plist);
 
-        // Launcher shell script
+        // Shell script launcher — we can't copy/hardlink the Electron binary
+        // (breaks code signing), so we use a script that execs Electron with
+        // our main.js. The menu bar name is set via Menu.setApplicationMenu()
+        // in our main.ts instead.
         const launcher = `#!/bin/bash
+
+# Source shell profile so nvm/PATH are available when launched from Finder
+if [ -f "$HOME/.zshrc" ]; then
+  source "$HOME/.zshrc" 2>/dev/null
+elif [ -f "$HOME/.bash_profile" ]; then
+  source "$HOME/.bash_profile" 2>/dev/null
+elif [ -f "$HOME/.bashrc" ]; then
+  source "$HOME/.bashrc" 2>/dev/null
+fi
+
+ELECTRON="${electronBin}"
 MAIN_JS="${mainJs}"
 
-# Find electron binary
-ELECTRON=""
-
-# Method 1: npm global modules
-if [ -z "$ELECTRON" ]; then
-  NPM_ROOT=$(npm root -g 2>/dev/null)
-  if [ -n "$NPM_ROOT" ] && [ -f "$NPM_ROOT/electron/dist/Electron.app/Contents/MacOS/Electron" ]; then
-    ELECTRON="$NPM_ROOT/electron/dist/Electron.app/Contents/MacOS/Electron"
-  elif [ -n "$NPM_ROOT" ] && [ -f "$NPM_ROOT/electron/cli.js" ]; then
-    ELECTRON=$(node "$NPM_ROOT/electron/cli.js" --print-path 2>/dev/null || echo "")
-  fi
-fi
-
-# Method 2: PATH
-if [ -z "$ELECTRON" ]; then
-  ELECTRON=$(which electron 2>/dev/null || echo "")
-fi
-
-if [ -z "$ELECTRON" ]; then
-  osascript -e 'display alert "Electron not found" message "Install Electron with: npm install -g electron" as critical'
+if [ ! -f "$ELECTRON" ]; then
+  osascript -e 'display alert "Electron not found" message "The Electron binary has moved. Reinstall with: council install" as critical'
   exit 1
 fi
 
 exec "$ELECTRON" "$MAIN_JS"
 `;
-        const launcherPath = resolve(macosDir, "ai-council");
+        const launcherPath = resolve(macosDir, "council");
         writeFileSync(launcherPath, launcher);
         chmodSync(launcherPath, 0o755);
 
+        // Remove legacy .app if present
+        if (existsSync("/Applications/AI Council.app")) {
+          try { rmSync("/Applications/AI Council.app", { recursive: true, force: true }); } catch {}
+        }
+
         setStatus(
-          "AI Council installed to /Applications.\nYou can find it in Spotlight or Launchpad.",
+          "State Change Council installed to /Applications.\nYou can find it in Spotlight or Launchpad.",
         );
       } catch (err: any) {
         setError(`Failed to create ${APP_PATH}: ${err.message}`);
