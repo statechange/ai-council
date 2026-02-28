@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "./Markdown";
 import { Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils";
 import { CounsellorAvatar } from "./CounsellorAvatar";
@@ -67,7 +67,7 @@ export function TurnBubble({ turn, streaming }: TurnBubbleProps) {
         >
           {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
-        <ReactMarkdown>{turn.content}</ReactMarkdown>
+        <Markdown>{turn.content}</Markdown>
         {streaming && <span className="inline-block w-2 h-4 ml-0.5 bg-current animate-pulse rounded-sm" />}
       </div>
     </div>

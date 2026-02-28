@@ -136,7 +136,7 @@ export function registerIpcHandlers(
   // --- App info ---
 
   ipcMain.handle("app:getCouncilDir", async () => {
-    const cwd = process.env.COUNCIL_CWD || homedir();
+    const cwd = process.env.COUNCIL_CWD || process.cwd();
     return resolve(cwd, "council");
   });
 
@@ -245,15 +245,27 @@ export function registerIpcHandlers(
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
+    previousTurns?: ConversationTurn[];
+    previousSummary?: string;
+    continuedFrom?: string;
   }) => {
     const win = getWindow();
     if (!win) return { error: "No window" };
 
+    const send = (event: ConversationEvent | { type: "complete"; result: unknown }) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send("discussion:event", event);
+      }
+    };
+
+    try {
     if (activeAbortController) {
       activeAbortController.abort();
     }
     activeAbortController = new AbortController();
     injectionBuffer = [];
+
+    log.info("ipc:discussion", "Starting discussion", { councilDir: params.councilDir, counsellorIds: params.counsellorIds, rounds: params.rounds, mode: params.mode });
 
     const configPath = join(homedir(), ".ai-council", "config.json");
     let config: CouncilConfig = { backends: {} };
@@ -262,21 +274,18 @@ export function registerIpcHandlers(
       config = JSON.parse(raw);
     } catch { /* no config */ }
     const registeredPaths = getRegisteredPaths(config);
+    log.info("ipc:discussion", `Loading counsellors from ${params.councilDir} + ${registeredPaths.length} registered paths`);
     const allCounsellors = await loadCounsellors(params.councilDir, registeredPaths);
     const counsellors = params.counsellorIds?.length
       ? allCounsellors.filter((c) => params.counsellorIds!.includes(c.id))
       : allCounsellors;
 
+    log.info("ipc:discussion", `Resolved ${counsellors.length} counsellors: ${counsellors.map(c => c.id).join(", ")}`);
+
     if (counsellors.length === 0) {
-      win.webContents.send("discussion:event", { type: "error", counsellorName: "", error: "No counsellors found" });
+      send({ type: "error", counsellorName: "", error: "No counsellors found" });
       return;
     }
-
-    const send = (event: ConversationEvent | { type: "complete"; result: unknown }) => {
-      if (!win.isDestroyed()) {
-        win.webContents.send("discussion:event", event);
-      }
-    };
 
     const beforeTurn = async (): Promise<ConversationTurn | null> => {
       if (injectionBuffer.length === 0) return null;
@@ -292,6 +301,7 @@ export function registerIpcHandlers(
       };
     };
 
+    const isContinuation = !!(params.previousTurns?.length);
     const opts: RunConversationOptions = {
       topic: params.topic,
       topicSource: params.topicSource,
@@ -300,11 +310,11 @@ export function registerIpcHandlers(
       onEvent: send,
       beforeTurn,
       signal: activeAbortController.signal,
-      mode: params.mode,
+      mode: isContinuation ? "freeform" : params.mode,
       config,
+      previousTurns: params.previousTurns,
+      previousSummary: params.previousSummary,
     };
-
-    try {
       const result = await runConversation(opts);
 
       // Run secretary if configured
@@ -362,6 +372,9 @@ export function registerIpcHandlers(
         }
       }
 
+      if (params.continuedFrom) {
+        (result as ConversationResult).continuedFrom = params.continuedFrom;
+      }
       send({ type: "complete", result });
       try { await saveToHistory(result); } catch (err) {
         log.error("ipc:discussion", "Failed to save to history", err);

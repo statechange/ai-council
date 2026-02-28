@@ -61,6 +61,9 @@ export function useDiscussion() {
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
+    previousTurns?: import("../../types").ConversationTurn[];
+    previousSummary?: string;
+    continuedFrom?: string;
   }) => {
     setState({
       isRunning: true,

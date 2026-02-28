@@ -30,12 +30,14 @@ Or run commands directly with `npx @statechange/council`.
 
 ## Counsellor Structure
 
-Each counsellor lives in a directory under the council path (default `./council/`), with an `ABOUT.md` file containing YAML frontmatter and a system prompt:
+Each counsellor lives in its own directory with an `ABOUT.md` file containing YAML frontmatter and a system prompt. Counsellors are registered in `~/.ai-council/config.json` and can live anywhere on disk, but the conventional location is `~/.ai-council/counsellors/`:
 
 ```
-council/
-  my-counsellor/
-    ABOUT.md
+~/.ai-council/
+  config.json              # Stores registered counsellor paths + API keys
+  counsellors/
+    my-counsellor/
+      ABOUT.md
 ```
 
 ### ABOUT.md Format
@@ -124,9 +126,12 @@ council config import   # Import found keys
 
 To create a new counsellor:
 
-1. Create a directory: `mkdir council/new-counsellor`
-2. Create `council/new-counsellor/ABOUT.md` with the frontmatter and system prompt
-3. Verify with `council list`
+1. Create a directory: `mkdir -p ~/.ai-council/counsellors/new-counsellor`
+2. Create `~/.ai-council/counsellors/new-counsellor/ABOUT.md` with the frontmatter and system prompt
+3. Register it: `council counsellor add ~/.ai-council/counsellors/new-counsellor`
+4. Verify with `council counsellor list`
+
+**Important:** Always create counsellors in `~/.ai-council/counsellors/` and register them — never in a project's local `./council/` directory. The `~/.ai-council/` location ensures counsellors are available globally regardless of working directory.
 
 ### Building a Counsellor from Source Material
 
@@ -171,7 +176,13 @@ Because pasting large reference texts directly into an LLM output can trigger co
 
 4. **Concatenate** header + body into the final ABOUT.md:
    ```bash
-   cat /tmp/header.md /tmp/source-body.txt > council/new-counsellor/ABOUT.md
+   mkdir -p ~/.ai-council/counsellors/new-counsellor
+   cat /tmp/header.md /tmp/source-body.txt > ~/.ai-council/counsellors/new-counsellor/ABOUT.md
+   ```
+
+5. **Register** the counsellor:
+   ```bash
+   council counsellor add ~/.ai-council/counsellors/new-counsellor
    ```
 
 This keeps the authored content (which goes through the LLM) small, and the bulk reference text is handled entirely through file operations.
@@ -179,7 +190,7 @@ This keeps the authored content (which goes through the LLM) small, and the bulk
 #### Tips
 
 - **Interests**: Pick 5-8 terms that reflect the counsellor's core domains. These appear as tags in the UI and help users understand what the counsellor brings.
-- **Avatar**: Prefer a real image of the person or what they're most associated with. For historical figures, authors, philosophers etc., download a public-domain portrait from Wikimedia Commons into the counsellor directory as `avatar.jpg` (use the Wikipedia API to find a thumbnail URL, then `curl -o council/<name>/avatar.jpg <url>`). Set `avatar: "avatar.jpg"` in frontmatter — relative paths are resolved automatically. Only fall back to DiceBear (`https://api.dicebear.com/9.x/personas/svg?seed=SlugHere&backgroundColor=hexWithoutHash`) for fictional or generic personas where no real image applies.
+- **Avatar**: Prefer a real image of the person or what they're most associated with. For historical figures, authors, philosophers etc., download a public-domain portrait from Wikimedia Commons into the counsellor directory as `avatar.jpg` (use the Wikipedia API to find a thumbnail URL, then `curl -o ~/.ai-council/counsellors/<name>/avatar.jpg <url>`). Set `avatar: "avatar.jpg"` in frontmatter — relative paths are resolved automatically. Only fall back to DiceBear (`https://api.dicebear.com/9.x/personas/svg?seed=SlugHere&backgroundColor=hexWithoutHash`) for fictional or generic personas where no real image applies.
 - **Temperature**: 0.7 is a good default. Go higher (0.8-0.9) for creative/provocative thinkers, lower (0.5-0.6) for analytical/precise ones.
 - **Source material size**: The full Communist Manifesto (~77KB) works fine. Larger texts will too but may increase token costs per discussion turn. Consider excerpting if a source exceeds ~200KB.
 - **Multiple sources**: You can append several reference texts with separate `## Reference Material:` headings.
@@ -204,10 +215,10 @@ council config import # Import found keys
 
 ## GUI Alternative
 
-All of the above can also be done in the Electron GUI (requires cloning the repo):
+All of the above can also be done in the Electron GUI:
 ```bash
-git clone https://github.com/statechangelabs/ai-council.git && cd council
-bun install && bun run dev:gui
+council gui            # Launch from current directory
+council gui ~/projects # Launch with a specific working directory
 ```
 - **Settings page**: Configure API keys, test connections, see available models
 - **Counsellors page**: Browse, create, edit, delete counsellors with a form editor

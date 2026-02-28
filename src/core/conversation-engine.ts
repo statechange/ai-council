@@ -14,8 +14,30 @@ function buildMessages(
   topic: string,
   turns: ConversationTurn[],
   currentCounsellorId: string,
+  previousTurns?: ConversationTurn[],
+  previousSummary?: string,
 ): ChatMessage[] {
   const messages: ChatMessage[] = [{ role: "user", content: topic }];
+
+  // Prepend previous conversation context if continuing
+  if (previousTurns?.length) {
+    for (const turn of previousTurns) {
+      if (turn.counsellorId === currentCounsellorId) {
+        messages.push({ role: "assistant", content: turn.content });
+      } else {
+        messages.push({
+          role: "user",
+          content: `[${turn.counsellorName}, Round ${turn.round}]: ${turn.content}`,
+        });
+      }
+    }
+    if (previousSummary) {
+      messages.push({
+        role: "user",
+        content: `[Secretary Summary]: ${previousSummary}`,
+      });
+    }
+  }
 
   for (const turn of turns) {
     if (turn.counsellorId === currentCounsellorId) {
@@ -145,6 +167,8 @@ export interface RunConversationOptions {
   signal?: AbortSignal;
   mode?: "freeform" | "debate";
   config?: CouncilConfig;
+  previousTurns?: ConversationTurn[];
+  previousSummary?: string;
 }
 
 export async function runConversation(
@@ -174,6 +198,11 @@ export async function runConversation(
   const isDebate = opts.mode === "debate";
   const roundSummaries: Record<number, string> = {};
 
+  // When continuing, offset round numbers past the previous rounds
+  const roundOffset = opts.previousTurns?.length
+    ? Math.max(...opts.previousTurns.map((t) => t.round))
+    : 0;
+
   log.info("conversation", `Starting ${isDebate ? "debate" : "freeform"} — ${opts.counsellors.length} counsellors, ${opts.rounds} rounds`, {
     counsellors: opts.counsellors.map((c) => `${c.frontmatter.name} (${c.frontmatter.backend}/${c.frontmatter.model ?? "default"})`),
     topic: opts.topic.slice(0, 200),
@@ -198,14 +227,15 @@ export async function runConversation(
         }
       }
 
-      opts.onEvent({ type: "turn_start", round, counsellorName: counsellor.frontmatter.name });
+      const displayRound = round + roundOffset;
+      opts.onEvent({ type: "turn_start", round: displayRound, counsellorName: counsellor.frontmatter.name });
 
       try {
         const backend = await getBackend(counsellor.frontmatter.backend);
         const model = counsellor.frontmatter.model ?? backend.defaultModel;
         const messages = isDebate
           ? buildDebateMessages(opts.topic, turns, counsellor.id, round)
-          : buildMessages(opts.topic, turns, counsellor.id);
+          : buildMessages(opts.topic, turns, counsellor.id, opts.previousTurns, opts.previousSummary);
         const chatRequest = {
           model,
           systemPrompt: counsellor.systemPrompt,
@@ -235,7 +265,7 @@ export async function runConversation(
         }
 
         const turn: ConversationTurn = {
-          round,
+          round: displayRound,
           counsellorId: counsellor.id,
           counsellorName: counsellor.frontmatter.name,
           content,

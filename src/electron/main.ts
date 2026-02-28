@@ -1,13 +1,16 @@
 import { app, BrowserWindow, ipcMain, protocol, net, Menu } from "electron";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { appendFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
 import { registerIpcHandlers } from "./ipc-handlers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const logFile = join(__dirname, "..", "electron-debug.log");
+const logDir = join(homedir(), ".ai-council");
+mkdirSync(logDir, { recursive: true });
+const logFile = join(logDir, "electron-debug.log");
 
 function log(source: string, ...args: unknown[]) {
   const line = `[${new Date().toISOString()}] [${source}] ${args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")}\n`;

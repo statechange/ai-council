@@ -99,7 +99,10 @@ export async function loadCounsellors(
   }
 
   if (counsellors.length === 0) {
-    throw new Error(`No counsellors found in ${councilDir}. Each counsellor needs a directory with an ABOUT.md file.`);
+    throw new Error(
+      `No counsellors found. Searched ${councilDir}${registeredPaths?.length ? ` and ${registeredPaths.length} registered path(s)` : ""}.\n` +
+      `Create one with: mkdir -p ~/.ai-council/counsellors/my-counsellor && council counsellor add ~/.ai-council/counsellors/my-counsellor`,
+    );
   }
 
   return counsellors;

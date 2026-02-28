@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "./Markdown";
 import { TurnBubble } from "./TurnBubble";
+import { CopyButton } from "./CopyButton";
 import { MessageSquare, FileText } from "lucide-react";
 import type { ConversationTurn } from "../../types";
 
@@ -30,9 +31,10 @@ function RoundSummaryCard({ round, content, streaming }: { round: number; conten
         <FileText className="h-3.5 w-3.5 text-primary" />
         <span className="text-xs font-medium text-primary">Round {round} Summary</span>
         {streaming && <span className="inline-block w-1.5 h-3.5 bg-primary animate-pulse rounded-sm" />}
+        {!streaming && <CopyButton text={content} />}
       </div>
       <div className="text-sm leading-relaxed prose-council">
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <Markdown>{content}</Markdown>
       </div>
     </div>
   );

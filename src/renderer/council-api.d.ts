@@ -62,6 +62,9 @@ export interface CouncilAPI {
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
+    previousTurns?: import("../types").ConversationTurn[];
+    previousSummary?: string;
+    continuedFrom?: string;
   }): Promise<void>;
   stopDiscussion(): Promise<{ success: boolean }>;
   injectMessage(content: string): Promise<{ success: boolean }>;

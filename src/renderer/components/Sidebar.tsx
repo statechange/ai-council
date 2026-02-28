@@ -1,5 +1,5 @@
-import React from "react";
-import { MessageSquare, Clock, Users, Settings } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MessageSquare, Clock, Users, Settings, Folder } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Separator } from "../ui/separator";
 import type { Page } from "../App";
@@ -17,6 +17,16 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+  const [councilDir, setCouncilDir] = useState<string>("");
+
+  useEffect(() => {
+    window.councilAPI.getCouncilDir().then((dir) => {
+      // Show the parent directory (the CWD), not the council/ subdirectory
+      const parent = dir.replace(/\/council\/?$/, "");
+      setCouncilDir(parent);
+    });
+  }, []);
+
   return (
     <nav className="w-56 flex flex-col border-r bg-card">
       <div className="flex items-center gap-2.5 px-4 py-5">
@@ -24,6 +34,12 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         <div>
           <h1 className="text-lg font-bold tracking-tight text-primary leading-tight">Council</h1>
           <p className="text-xs text-muted-foreground">Discussion orchestrator</p>
+          {councilDir && (
+            <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5 flex items-center gap-1" title={councilDir}>
+              <Folder className="h-2.5 w-2.5 shrink-0" />
+              {councilDir.replace(/^\/Users\/[^/]+/, "~")}
+            </p>
+          )}
         </div>
       </div>
       <Separator />

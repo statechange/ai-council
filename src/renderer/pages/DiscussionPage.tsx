@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import { Play, Square, Send, AlertTriangle, FileText, Image, Loader2 } from "lucide-react";
+import { Markdown } from "../components/Markdown";
+import { Play, Square, Send, AlertTriangle, FileText, Image, Loader2, MessageSquarePlus } from "lucide-react";
+import { CopyButton } from "../components/CopyButton";
+import { CopyImageButton } from "../components/CopyImageButton";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { TopicInput, type Attachment } from "../components/TopicInput";
@@ -30,6 +32,8 @@ export function DiscussionPage() {
   const [selectedInfographics, setSelectedInfographics] = useState<Set<"openai" | "google">>(new Set());
   const [mode, setMode] = useState<"freeform" | "debate">("freeform");
   const [councilDir, setCouncilDir] = useState<string>("./council");
+  const [continuePrompt, setContinuePrompt] = useState("");
+  const [continueRounds, setContinueRounds] = useState(1);
 
   const discussion = useDiscussion();
 
@@ -139,6 +143,22 @@ export function DiscussionPage() {
       );
       setAttachments(updated);
     }
+  };
+
+  const handleContinue = () => {
+    if (!continuePrompt.trim() || !discussion.result) return;
+    discussion.start({
+      topic: continuePrompt.trim(),
+      topicSource: "inline",
+      councilDir,
+      counsellorIds: selectedIds.size === counsellors.length ? undefined : Array.from(selectedIds),
+      rounds: continueRounds,
+      infographicBackends: selectedInfographics.size > 0 ? Array.from(selectedInfographics) : undefined,
+      previousTurns: discussion.result.turns,
+      previousSummary: discussion.result.summary,
+      continuedFrom: discussion.result.title || discussion.result.topic,
+    });
+    setContinuePrompt("");
   };
 
   const toggleCounsellor = (id: string) => {
@@ -333,9 +353,10 @@ export function DiscussionPage() {
               {discussion.summaryStatus === "running" && (
                 <span className="inline-block w-2 h-4 bg-primary animate-pulse rounded-sm" />
               )}
+              {discussion.summaryContent && <CopyButton text={discussion.summaryContent} />}
             </div>
             <div className="rounded-lg border bg-card px-4 py-3 text-sm leading-relaxed prose-council">
-              <ReactMarkdown>{discussion.summaryContent}</ReactMarkdown>
+              <Markdown>{discussion.summaryContent}</Markdown>
             </div>
 
             {/* Excalidraw Diagram */}
@@ -359,12 +380,16 @@ export function DiscussionPage() {
             </div>
             <div className="space-y-3">
               {discussion.infographics.map((data, i) => (
-                <img
-                  key={i}
-                  src={`data:image/png;base64,${data}`}
-                  alt={`Infographic ${i + 1}`}
-                  className="rounded-lg border max-w-full"
-                />
+                <div key={i} className="relative group">
+                  <img
+                    src={`data:image/png;base64,${data}`}
+                    alt={`Infographic ${i + 1}`}
+                    className="rounded-lg border max-w-full"
+                  />
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <CopyImageButton base64={data} className="p-1.5 rounded-md bg-background/80 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground" />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -381,6 +406,40 @@ export function DiscussionPage() {
           <div className="px-4 py-4 border-t">
             <div className="px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-xs">
               Infographic error: {discussion.infographicError}
+            </div>
+          </div>
+        )}
+
+        {/* Continue discussion */}
+        {discussion.result && !discussion.isRunning && (
+          <div className="px-4 py-4 border-t">
+            <div className="flex items-center gap-2 mb-3">
+              <MessageSquarePlus className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-primary">Continue Discussion</h3>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={continuePrompt}
+                onChange={(e) => setContinuePrompt(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleContinue()}
+                placeholder="Ask a follow-up question..."
+                className="h-9 text-sm flex-1"
+              />
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">Rounds</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={continueRounds}
+                  onChange={(e) => setContinueRounds(parseInt(e.target.value) || 1)}
+                  className="w-14 h-9 text-center text-xs"
+                />
+              </div>
+              <Button onClick={handleContinue} disabled={!continuePrompt.trim()} size="sm" className="gap-1.5 shrink-0">
+                <Play className="h-3.5 w-3.5" />
+                Continue
+              </Button>
             </div>
           </div>
         )}

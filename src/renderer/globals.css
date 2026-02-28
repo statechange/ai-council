@@ -74,3 +74,6 @@
 }
 .prose-council strong { @apply font-semibold; }
 .prose-council a { @apply text-primary underline; }
+.prose-council table { @apply w-full border-collapse mb-2 text-sm; }
+.prose-council th { @apply border border-border bg-muted/50 px-3 py-1.5 text-left font-semibold; }
+.prose-council td { @apply border border-border px-3 py-1.5; }

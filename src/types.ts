@@ -55,6 +55,7 @@ export interface ConversationResult {
   infographics?: string[];
   roundSummaries?: Record<number, string>;
   mode?: "freeform" | "debate";
+  continuedFrom?: string;
 }
 
 export interface ChatMessage {

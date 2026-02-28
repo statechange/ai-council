@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "../components/Markdown";
 import { Clock, ArrowLeft, Trash2, Users, RotateCcw, FileText, Share2, MessageSquare, Copy, Check, Eye, EyeOff, Image, Loader2 } from "lucide-react";
+import { CopyButton } from "../components/CopyButton";
+import { CopyImageButton } from "../components/CopyImageButton";
 import { BackendIcon } from "../components/BackendIcon";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
@@ -184,12 +186,12 @@ export function HistoryPage() {
               </div>
               {showRaw ? (
                 <div className="text-sm leading-relaxed pr-8 prose-council">
-                  <ReactMarkdown>{detail.topic.replace(/(?<!\n)\n(?!\n)/g, "\n\n")}</ReactMarkdown>
+                  <Markdown>{detail.topic.replace(/(?<!\n)\n(?!\n)/g, "\n\n")}</Markdown>
                 </div>
               ) : (
                 <>
                   <div className="text-sm leading-relaxed pr-8 prose-council">
-                    <ReactMarkdown>{(parsed?.prompt ?? detail.topic).replace(/(?<!\n)\n(?!\n)/g, "\n\n")}</ReactMarkdown>
+                    <Markdown>{(parsed?.prompt ?? detail.topic).replace(/(?<!\n)\n(?!\n)/g, "\n\n")}</Markdown>
                   </div>
                   {parsed && parsed.attachments.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -225,9 +227,10 @@ export function HistoryPage() {
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold text-primary">Secretary's Summary</h3>
+                <CopyButton text={detail.summary} />
               </div>
               <div className="rounded-lg border bg-card px-4 py-3 text-sm leading-relaxed prose-council">
-                <ReactMarkdown>{detail.summary}</ReactMarkdown>
+                <Markdown>{detail.summary}</Markdown>
               </div>
 
               {/* Excalidraw Diagram */}
@@ -259,24 +262,27 @@ export function HistoryPage() {
                           alt={`Infographic ${i + 1}`}
                           className="rounded-lg border max-w-full"
                         />
-                        <button
-                          onClick={async () => {
-                            if (!selectedId) return;
-                            try {
-                              await window.councilAPI.deleteInfographic(selectedId, i);
-                              setDetail((prev) => {
-                                if (!prev?.infographics) return prev;
-                                const updated = [...prev.infographics!];
-                                updated.splice(i, 1);
-                                return { ...prev, infographics: updated };
-                              });
-                            } catch { /* ignore */ }
-                          }}
-                          className="absolute top-2 right-2 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-destructive/10 border border-border/50 text-muted-foreground hover:text-destructive"
-                          title="Delete infographic"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <CopyImageButton base64={data} className="p-1.5 rounded-md bg-background/80 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground" />
+                          <button
+                            onClick={async () => {
+                              if (!selectedId) return;
+                              try {
+                                await window.councilAPI.deleteInfographic(selectedId, i);
+                                setDetail((prev) => {
+                                  if (!prev?.infographics) return prev;
+                                  const updated = [...prev.infographics!];
+                                  updated.splice(i, 1);
+                                  return { ...prev, infographics: updated };
+                                });
+                              } catch { /* ignore */ }
+                            }}
+                            className="p-1.5 rounded-md bg-background/80 hover:bg-destructive/10 border border-border/50 text-muted-foreground hover:text-destructive"
+                            title="Delete infographic"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

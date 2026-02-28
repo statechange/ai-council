@@ -36,6 +36,9 @@ const councilAPI = {
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
+    previousTurns?: import("../types.js").ConversationTurn[];
+    previousSummary?: string;
+    continuedFrom?: string;
   }) => ipcRenderer.invoke("discussion:start", params),
 
   stopDiscussion: () =>
