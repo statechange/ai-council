@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Markdown } from "./Markdown";
 import { Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils";
-import { CounsellorAvatar } from "./CounsellorAvatar";
+import { CouncilorAvatar } from "./CouncilorAvatar";
 import type { ConversationTurn } from "../../types";
 
 const textPalette = [
@@ -30,7 +30,7 @@ interface TurnBubbleProps {
 }
 
 export function TurnBubble({ turn, streaming }: TurnBubbleProps) {
-  const isUser = turn.counsellorId === "__user__";
+  const isUser = turn.councilorId === "__user__";
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -43,10 +43,10 @@ export function TurnBubble({ turn, streaming }: TurnBubbleProps) {
     <div className="group py-3">
       <div className="flex items-center gap-2 mb-1">
         {!isUser && (
-          <CounsellorAvatar name={turn.counsellorName} avatarUrl={turn.avatarUrl} size={48} />
+          <CouncilorAvatar name={turn.councilorName} avatarUrl={turn.avatarUrl} size={48} />
         )}
-        <span className={cn("text-sm font-semibold", isUser ? "text-muted-foreground" : nameColor(turn.counsellorName))}>
-          {turn.counsellorName}
+        <span className={cn("text-sm font-semibold", isUser ? "text-muted-foreground" : nameColor(turn.councilorName))}>
+          {turn.councilorName}
         </span>
         {!isUser && (
           <span className="text-[11px] text-muted-foreground/60">

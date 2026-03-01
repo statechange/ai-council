@@ -3,15 +3,15 @@ import { Box, Text } from "ink";
 import Spinner from "ink-spinner";
 import {
   getRegistry,
-  addLocalCounsellor,
-  addRemoteCounsellor,
-  removeCounsellor,
-} from "../core/counsellor-registry.js";
+  addLocalCouncilor,
+  addRemoteCouncilor,
+  removeCouncilor,
+} from "../core/councilor-registry.js";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { existsSync } from "node:fs";
-import type { CouncilConfig, CounsellorRegistryEntry } from "../types.js";
+import type { CouncilConfig, CouncilorRegistryEntry } from "../types.js";
 
 interface Props {
   subcommand: "add" | "remove" | "list";
@@ -23,10 +23,10 @@ function isUrl(s: string): boolean {
   return s.startsWith("http://") || s.startsWith("https://") || s.endsWith(".git");
 }
 
-export function CounsellorCommand({ subcommand, target, yes }: Props) {
+export function CouncilorCommand({ subcommand, target, yes }: Props) {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [message, setMessage] = useState("");
-  const [registry, setRegistry] = useState<Record<string, CounsellorRegistryEntry>>({});
+  const [registry, setRegistry] = useState<Record<string, CouncilorRegistryEntry>>({});
 
   useEffect(() => {
     async function run() {
@@ -34,7 +34,7 @@ export function CounsellorCommand({ subcommand, target, yes }: Props) {
         switch (subcommand) {
           case "add": {
             if (!target) {
-              setMessage("Error: Please provide a path or URL.\n  $ council counsellor add <path-or-url>");
+              setMessage("Error: Please provide a path or URL.\n  $ council councilor add <path-or-url>");
               setStatus("error");
               process.exitCode = 1;
               return;
@@ -42,11 +42,11 @@ export function CounsellorCommand({ subcommand, target, yes }: Props) {
 
             if (isUrl(target)) {
               setMessage(`Cloning ${target}...`);
-              const results = await addRemoteCounsellor(target);
+              const results = await addRemoteCouncilor(target);
               const lines = results.map((r) => `  ${r.id} — ${r.name}`).join("\n");
-              setMessage(`Registered ${results.length} counsellor${results.length > 1 ? "s" : ""} from git:\n${lines}`);
+              setMessage(`Registered ${results.length} councilor${results.length > 1 ? "s" : ""} from git:\n${lines}`);
             } else {
-              const result = await addLocalCounsellor(target);
+              const result = await addLocalCouncilor(target);
               setMessage(`Registered: ${result.id} — ${result.name}`);
             }
             setStatus("done");
@@ -55,12 +55,12 @@ export function CounsellorCommand({ subcommand, target, yes }: Props) {
 
           case "remove": {
             if (!target) {
-              setMessage("Error: Please provide a counsellor id.\n  $ council counsellor remove <id>");
+              setMessage("Error: Please provide a councilor id.\n  $ council councilor remove <id>");
               setStatus("error");
               process.exitCode = 1;
               return;
             }
-            await removeCounsellor(target, yes);
+            await removeCouncilor(target, yes);
             setMessage(`Removed: ${target}`);
             setStatus("done");
             break;
@@ -105,11 +105,11 @@ export function CounsellorCommand({ subcommand, target, yes }: Props) {
   if (subcommand === "list") {
     const entries = Object.entries(registry);
     if (entries.length === 0) {
-      return <Text dimColor>No registered counsellors. Use `council counsellor add` to register one.</Text>;
+      return <Text dimColor>No registered councilors. Use `council councilor add` to register one.</Text>;
     }
     return (
       <Box flexDirection="column" paddingY={1}>
-        <Text bold>Registered Counsellors ({entries.length})</Text>
+        <Text bold>Registered Councilors ({entries.length})</Text>
         <Text> </Text>
         {entries.map(([id, entry]) => {
           const onDisk = existsSync(join(entry.path, "ABOUT.md"));

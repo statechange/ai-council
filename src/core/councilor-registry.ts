@@ -4,12 +4,12 @@ import { homedir } from "node:os";
 import { existsSync } from "node:fs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import type { CouncilConfig, CounsellorRegistryEntry } from "../types.js";
+import type { CouncilConfig, CouncilorRegistryEntry } from "../types.js";
 
 const execFileAsync = promisify(execFile);
 
 const CONFIG_PATH = join(homedir(), ".ai-council", "config.json");
-const CLONES_DIR = join(homedir(), ".ai-council", "counsellors");
+const CLONES_DIR = join(homedir(), ".ai-council", "councilors");
 
 async function loadConfig(): Promise<CouncilConfig> {
   try {
@@ -25,15 +25,15 @@ async function saveConfig(config: CouncilConfig): Promise<void> {
   await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 }
 
-export function getRegistry(config: CouncilConfig): Record<string, CounsellorRegistryEntry> {
-  return config.counsellors ?? {};
+export function getRegistry(config: CouncilConfig): Record<string, CouncilorRegistryEntry> {
+  return config.councilors ?? (config as any).counsellors ?? {};
 }
 
 export function getRegisteredPaths(config: CouncilConfig): string[] {
-  return Object.values(config.counsellors ?? {}).map((e) => e.path);
+  return Object.values(getRegistry(config)).map((e) => e.path);
 }
 
-export async function addLocalCounsellor(dirPath: string): Promise<{ id: string; name: string }> {
+export async function addLocalCouncilor(dirPath: string): Promise<{ id: string; name: string }> {
   const absPath = resolve(dirPath);
   const aboutPath = join(absPath, "ABOUT.md");
 
@@ -43,10 +43,10 @@ export async function addLocalCounsellor(dirPath: string): Promise<{ id: string;
 
   const id = basename(absPath);
   const config = await loadConfig();
-  const registry = config.counsellors ?? {};
+  const registry = config.councilors ?? {};
 
   if (registry[id]) {
-    throw new Error(`Counsellor "${id}" is already registered (path: ${registry[id].path})`);
+    throw new Error(`Councilor "${id}" is already registered (path: ${registry[id].path})`);
   }
 
   // Read the name from frontmatter
@@ -59,13 +59,13 @@ export async function addLocalCounsellor(dirPath: string): Promise<{ id: string;
     source: "local",
     addedAt: new Date().toISOString(),
   };
-  config.counsellors = registry;
+  config.councilors = registry;
   await saveConfig(config);
 
   return { id, name: displayName };
 }
 
-export async function addRemoteCounsellor(url: string): Promise<{ id: string; name: string }[]> {
+export async function addRemoteCouncilor(url: string): Promise<{ id: string; name: string }[]> {
   await mkdir(CLONES_DIR, { recursive: true });
 
   // Derive name from URL
@@ -80,13 +80,13 @@ export async function addRemoteCounsellor(url: string): Promise<{ id: string; na
 
   const results: { id: string; name: string }[] = [];
   const config = await loadConfig();
-  const registry = config.counsellors ?? {};
+  const registry = config.councilors ?? {};
 
-  // Check if root has ABOUT.md (single counsellor repo)
+  // Check if root has ABOUT.md (single councilor repo)
   if (existsSync(join(clonePath, "ABOUT.md"))) {
     const id = repoName;
     if (registry[id]) {
-      throw new Error(`Counsellor "${id}" is already registered`);
+      throw new Error(`Councilor "${id}" is already registered`);
     }
 
     const raw = await readFile(join(clonePath, "ABOUT.md"), "utf-8");
@@ -101,7 +101,7 @@ export async function addRemoteCounsellor(url: string): Promise<{ id: string; na
     };
     results.push({ id, name: displayName });
   } else {
-    // Multi-counsellor repo: scan child directories
+    // Multi-councilor repo: scan child directories
     const entries = await readdir(clonePath);
     for (const entry of entries) {
       if (entry.startsWith(".")) continue;
@@ -127,34 +127,34 @@ export async function addRemoteCounsellor(url: string): Promise<{ id: string; na
 
     if (results.length === 0) {
       await rm(clonePath, { recursive: true, force: true });
-      throw new Error(`No counsellors found in cloned repository (no ABOUT.md files)`);
+      throw new Error(`No councilors found in cloned repository (no ABOUT.md files)`);
     }
   }
 
-  config.counsellors = registry;
+  config.councilors = registry;
   await saveConfig(config);
 
   return results;
 }
 
-export async function removeCounsellor(
+export async function removeCouncilor(
   id: string,
   deleteFiles = false,
 ): Promise<void> {
   const config = await loadConfig();
-  const registry = config.counsellors ?? {};
+  const registry = config.councilors ?? {};
   const entry = registry[id];
 
   if (!entry) {
-    throw new Error(`Counsellor "${id}" is not registered`);
+    throw new Error(`Councilor "${id}" is not registered`);
   }
 
-  // Only delete files for git-cloned counsellors when requested
+  // Only delete files for git-cloned councilors when requested
   if (deleteFiles && entry.source === "git" && existsSync(entry.path)) {
     await rm(entry.path, { recursive: true, force: true });
   }
 
   delete registry[id];
-  config.counsellors = registry;
+  config.councilors = registry;
   await saveConfig(config);
 }

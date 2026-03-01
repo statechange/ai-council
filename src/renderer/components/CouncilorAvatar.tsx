@@ -25,14 +25,14 @@ function colorForName(name: string): string {
   return bgPalette[Math.abs(hash) % bgPalette.length];
 }
 
-interface CounsellorAvatarProps {
+interface CouncilorAvatarProps {
   name: string;
   avatarUrl?: string;
   size?: number;
   className?: string;
 }
 
-export function CounsellorAvatar({ name, avatarUrl, size = 24, className }: CounsellorAvatarProps) {
+export function CouncilorAvatar({ name, avatarUrl, size = 24, className }: CouncilorAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
   const sizeClass = size <= 16 ? "w-4 h-4 text-[9px]"

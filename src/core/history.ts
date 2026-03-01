@@ -7,7 +7,7 @@ export interface HistoryEntry {
   id: string;
   topic: string;
   title?: string;
-  counsellors: string[];
+  councilors: string[];
   rounds: number;
   startedAt: string;
   completedAt: string;
@@ -42,7 +42,7 @@ export async function listHistory(): Promise<HistoryEntry[]> {
         id: basename(file, ".json"),
         topic: result.topic,
         title: result.title,
-        counsellors: result.counsellors.map(c => c.name),
+        councilors: result.councilors.map(c => c.name),
         rounds: result.rounds,
         startedAt: result.startedAt,
         completedAt: result.completedAt,

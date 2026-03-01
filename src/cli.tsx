@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import { DiscussCommand } from "./commands/discuss.js";
 import { ListCommand } from "./commands/list.js";
 import { ConfigCommand } from "./commands/config.js";
-import { CounsellorCommand } from "./commands/counsellor.js";
+import { CouncilorCommand } from "./commands/councilor.js";
 import { HistoryCommand } from "./commands/history.js";
 import { GuiCommand } from "./commands/gui.js";
 import { InstallCommand } from "./commands/install.js";
@@ -20,12 +20,12 @@ const cli = meow(
 
   Commands
     discuss <topic>        Run a council discussion on a topic (string or file path)
-    list                   List available counsellors
+    list                   List available councilors
     history                List past discussions
     history <id>           Show a specific past discussion
-    counsellor add <path-or-url>  Register a counsellor from a local path or git URL
-    counsellor remove <id>        Unregister a counsellor (--yes to delete cloned files)
-    counsellor list               List all registered counsellors
+    councilor add <path-or-url>  Register a councilor from a local path or git URL
+    councilor remove <id>        Unregister a councilor (--yes to delete cloned files)
+    councilor list               List all registered councilors
     gui                    Launch the Electron GUI
     install                Install AI Council as a macOS application
     install --uninstall    Remove AI Council from Applications
@@ -35,15 +35,15 @@ const cli = meow(
 
   Options
     --council, -c       Path to council directory (default: ./council/)
-    --counsellors       Specific counsellor directory paths (space-separated)
+    --councilors       Specific councilor directory paths (space-separated)
     --rounds, -r        Number of discussion rounds (default: 2)
     --output, -o        Output directory (default: ./output)
     --format, -f        Output format: md, json, or both (default: both)
     --mode, -m          Discussion mode: freeform or debate (default: freeform)
-                          freeform — open group chat; every counsellor sees the
+                          freeform — open group chat; every councilor sees the
                                      full conversation history on every turn
                           debate   — structured argument; round 1 is constructive
-                                     (each counsellor argues blind), then rebuttal
+                                     (each councilor argues blind), then rebuttal
                                      rounds see only the constructives + previous
                                      round; speaker order is shuffled each round;
                                      interim summaries after every round
@@ -53,7 +53,7 @@ const cli = meow(
   Examples
     $ council discuss "Should we pivot to enterprise?" --rounds 3
     $ council discuss "Should AI be open source?" --mode debate --rounds 3
-    $ council discuss ./topic.md --counsellors ./council/strategist ./council/critic
+    $ council discuss ./topic.md --councilors ./council/strategist ./council/critic
     $ council list --council ./council/
     $ council config scan
     $ council config scan ~/projects/myapp/.env ~/other/.env
@@ -68,7 +68,7 @@ const cli = meow(
         shortFlag: "c",
         default: "./council/",
       },
-      counsellors: {
+      councilors: {
         type: "string",
         isMultiple: true,
       },
@@ -133,9 +133,9 @@ switch (command) {
       <DiscussCommand
         topic={topic}
         councilDir={resolve(cli.flags.council)}
-        counsellorPaths={
-          cli.flags.counsellors && cli.flags.counsellors.length > 0
-            ? cli.flags.counsellors.map((p) => resolve(p))
+        councilorPaths={
+          cli.flags.councilors && cli.flags.councilors.length > 0
+            ? cli.flags.councilors.map((p) => resolve(p))
             : undefined
         }
         rounds={cli.flags.rounds}
@@ -158,15 +158,15 @@ switch (command) {
     render(<ListCommand councilDir={resolve(cli.flags.council)} />);
     break;
 
-  case "counsellor": {
+  case "councilor": {
     const sub = cli.input[1];
     if (!sub || !["add", "remove", "list"].includes(sub)) {
-      console.error("Usage: council counsellor <add|remove|list> [target]");
+      console.error("Usage: council councilor <add|remove|list> [target]");
       process.exit(1);
     }
     const target = cli.input[2];
     render(
-      <CounsellorCommand
+      <CouncilorCommand
         subcommand={sub as "add" | "remove" | "list"}
         target={target}
         yes={cli.flags.yes}

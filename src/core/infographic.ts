@@ -4,8 +4,8 @@ import type { ConversationResult, CouncilConfig } from "../types.js";
 const require = createRequire(import.meta.url);
 
 function buildPrompt(result: ConversationResult): string {
-  const names = result.counsellors.map((c) => c.name).join(", ");
-  const summary = result.summary ?? result.turns.map((t) => `${t.counsellorName}: ${t.content.slice(0, 200)}`).join("\n");
+  const names = result.councilors.map((c) => c.name).join(", ");
+  const summary = result.summary ?? result.turns.map((t) => `${t.councilorName}: ${t.content.slice(0, 200)}`).join("\n");
 
   return [
     "Create a professional infographic summarizing a panel discussion.",

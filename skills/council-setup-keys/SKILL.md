@@ -1,6 +1,6 @@
 ---
 name: council-setup-keys
-description: Find AI API keys scattered across env files, shell profiles, and project directories, then consolidate them into the AI Council config at ~/.ai-council/config.json. Use when setting up AI Council, when counsellors show missing API key errors, or when the user asks to configure backends.
+description: Find AI API keys scattered across env files, shell profiles, and project directories, then consolidate them into the AI Council config at ~/.ai-council/config.json. Use when setting up AI Council, when councilors (or counsellors) show missing API key errors, or when the user asks to configure backends.
 license: MIT
 metadata:
   author: ai-council
@@ -24,7 +24,7 @@ Or run commands directly with `npx @statechange/council`.
 ## When to Use
 
 - The user asks to set up or configure AI Council
-- Counsellors are showing red / missing API key warnings
+- Councilors are showing red / missing API key warnings
 - The user wants to find their API keys from other projects
 - The user says something like "find my keys", "setup my backends", or "configure API keys"
 

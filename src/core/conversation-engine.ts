@@ -1,5 +1,5 @@
 import type {
-  Counsellor,
+  Councilor,
   ConversationTurn,
   ConversationResult,
   ConversationEvent,
@@ -13,7 +13,7 @@ import { log } from "./logger.js";
 function buildMessages(
   topic: string,
   turns: ConversationTurn[],
-  currentCounsellorId: string,
+  currentCouncilorId: string,
   previousTurns?: ConversationTurn[],
   previousSummary?: string,
 ): ChatMessage[] {
@@ -22,12 +22,12 @@ function buildMessages(
   // Prepend previous conversation context if continuing
   if (previousTurns?.length) {
     for (const turn of previousTurns) {
-      if (turn.counsellorId === currentCounsellorId) {
+      if (turn.councilorId === currentCouncilorId) {
         messages.push({ role: "assistant", content: turn.content });
       } else {
         messages.push({
           role: "user",
-          content: `[${turn.counsellorName}, Round ${turn.round}]: ${turn.content}`,
+          content: `[${turn.councilorName}, Round ${turn.round}]: ${turn.content}`,
         });
       }
     }
@@ -40,12 +40,12 @@ function buildMessages(
   }
 
   for (const turn of turns) {
-    if (turn.counsellorId === currentCounsellorId) {
+    if (turn.councilorId === currentCouncilorId) {
       messages.push({ role: "assistant", content: turn.content });
     } else {
       messages.push({
         role: "user",
-        content: `[${turn.counsellorName}, Round ${turn.round}]: ${turn.content}`,
+        content: `[${turn.councilorName}, Round ${turn.round}]: ${turn.content}`,
       });
     }
   }
@@ -56,7 +56,7 @@ function buildMessages(
 function buildDebateMessages(
   topic: string,
   turns: ConversationTurn[],
-  currentCounsellorId: string,
+  currentCouncilorId: string,
   currentRound: number,
 ): ChatMessage[] {
   const messages: ChatMessage[] = [{ role: "user", content: topic }];
@@ -69,12 +69,12 @@ function buildDebateMessages(
   // Rebuttal: show all round 1 (constructive) turns
   const constructiveTurns = turns.filter((t) => t.round === 1);
   for (const turn of constructiveTurns) {
-    if (turn.counsellorId === currentCounsellorId) {
+    if (turn.councilorId === currentCouncilorId) {
       messages.push({ role: "assistant", content: turn.content });
     } else {
       messages.push({
         role: "user",
-        content: `[${turn.counsellorName}, Constructive]: ${turn.content}`,
+        content: `[${turn.councilorName}, Constructive]: ${turn.content}`,
       });
     }
   }
@@ -84,21 +84,21 @@ function buildDebateMessages(
   if (prevRound > 1) {
     const prevTurns = turns.filter((t) => t.round === prevRound);
     for (const turn of prevTurns) {
-      if (turn.counsellorId === currentCounsellorId) {
+      if (turn.councilorId === currentCouncilorId) {
         messages.push({ role: "assistant", content: turn.content });
       } else {
         messages.push({
           role: "user",
-          content: `[${turn.counsellorName}, Round ${prevRound}]: ${turn.content}`,
+          content: `[${turn.councilorName}, Round ${prevRound}]: ${turn.content}`,
         });
       }
     }
   }
 
-  // Include current counsellor's own prior turns from other rebuttal rounds (not round 1, not prevRound)
+  // Include current councilor's own prior turns from other rebuttal rounds (not round 1, not prevRound)
   for (const turn of turns) {
     if (
-      turn.counsellorId === currentCounsellorId &&
+      turn.councilorId === currentCouncilorId &&
       turn.round !== 1 &&
       turn.round !== prevRound &&
       turn.round < currentRound
@@ -139,7 +139,7 @@ function buildResult(
   return {
     topic: opts.topic,
     topicSource: opts.topicSource,
-    counsellors: opts.counsellors.map((c) => ({
+    councilors: opts.councilors.map((c) => ({
       id: c.id,
       name: c.frontmatter.name,
       description: c.frontmatter.description,
@@ -160,7 +160,7 @@ function buildResult(
 export interface RunConversationOptions {
   topic: string;
   topicSource: "inline" | "file";
-  counsellors: Counsellor[];
+  councilors: Councilor[];
   rounds: number;
   onEvent: (event: ConversationEvent) => void;
   beforeTurn?: () => Promise<ConversationTurn | null>;
@@ -174,7 +174,7 @@ export interface RunConversationOptions {
 export async function runConversation(
   topicOrOpts: string | RunConversationOptions,
   topicSource?: "inline" | "file",
-  counsellors?: Counsellor[],
+  councilors?: Councilor[],
   rounds?: number,
   onEvent?: (event: ConversationEvent) => void,
 ): Promise<ConversationResult> {
@@ -183,7 +183,7 @@ export async function runConversation(
     opts = {
       topic: topicOrOpts,
       topicSource: topicSource!,
-      counsellors: counsellors!,
+      councilors: councilors!,
       rounds: rounds!,
       onEvent: onEvent!,
     };
@@ -203,18 +203,18 @@ export async function runConversation(
     ? Math.max(...opts.previousTurns.map((t) => t.round))
     : 0;
 
-  log.info("conversation", `Starting ${isDebate ? "debate" : "freeform"} — ${opts.counsellors.length} counsellors, ${opts.rounds} rounds`, {
-    counsellors: opts.counsellors.map((c) => `${c.frontmatter.name} (${c.frontmatter.backend}/${c.frontmatter.model ?? "default"})`),
+  log.info("conversation", `Starting ${isDebate ? "debate" : "freeform"} — ${opts.councilors.length} councilors, ${opts.rounds} rounds`, {
+    councilors: opts.councilors.map((c) => `${c.frontmatter.name} (${c.frontmatter.backend}/${c.frontmatter.model ?? "default"})`),
     topic: opts.topic.slice(0, 200),
   });
 
   for (let round = 1; round <= opts.rounds; round++) {
     // In debate mode: round 1 keeps original order, rounds 2+ shuffle
-    const roundCounsellors = isDebate && round > 1
-      ? shuffleWithSeed(opts.counsellors, round)
-      : opts.counsellors;
+    const roundCouncilors = isDebate && round > 1
+      ? shuffleWithSeed(opts.councilors, round)
+      : opts.councilors;
 
-    for (const counsellor of roundCounsellors) {
+    for (const councilor of roundCouncilors) {
       if (opts.signal?.aborted) {
         return buildResult(opts, turns, startedAt, totalInput, totalOutput, roundSummaries);
       }
@@ -228,19 +228,19 @@ export async function runConversation(
       }
 
       const displayRound = round + roundOffset;
-      opts.onEvent({ type: "turn_start", round: displayRound, counsellorName: counsellor.frontmatter.name });
+      opts.onEvent({ type: "turn_start", round: displayRound, councilorName: councilor.frontmatter.name });
 
       try {
-        const backend = await getBackend(counsellor.frontmatter.backend);
-        const model = counsellor.frontmatter.model ?? backend.defaultModel;
+        const backend = await getBackend(councilor.frontmatter.backend);
+        const model = councilor.frontmatter.model ?? backend.defaultModel;
         const messages = isDebate
-          ? buildDebateMessages(opts.topic, turns, counsellor.id, round)
-          : buildMessages(opts.topic, turns, counsellor.id, opts.previousTurns, opts.previousSummary);
+          ? buildDebateMessages(opts.topic, turns, councilor.id, round)
+          : buildMessages(opts.topic, turns, councilor.id, opts.previousTurns, opts.previousSummary);
         const chatRequest = {
           model,
-          systemPrompt: counsellor.systemPrompt,
+          systemPrompt: councilor.systemPrompt,
           messages,
-          temperature: counsellor.frontmatter.temperature,
+          temperature: councilor.frontmatter.temperature,
         };
 
         let content: string;
@@ -252,7 +252,7 @@ export async function runConversation(
             if (opts.signal?.aborted) break;
             content += chunk.delta;
             if (chunk.delta) {
-              opts.onEvent({ type: "turn_chunk", counsellorName: counsellor.frontmatter.name, delta: chunk.delta });
+              opts.onEvent({ type: "turn_chunk", councilorName: councilor.frontmatter.name, delta: chunk.delta });
             }
             if (chunk.tokenUsage) {
               tokenUsage = chunk.tokenUsage;
@@ -266,14 +266,14 @@ export async function runConversation(
 
         const turn: ConversationTurn = {
           round: displayRound,
-          counsellorId: counsellor.id,
-          counsellorName: counsellor.frontmatter.name,
+          councilorId: councilor.id,
+          councilorName: councilor.frontmatter.name,
           content,
           timestamp: new Date().toISOString(),
           model,
-          backend: counsellor.frontmatter.backend,
+          backend: councilor.frontmatter.backend,
           tokenUsage,
-          avatarUrl: counsellor.avatarUrl,
+          avatarUrl: councilor.avatarUrl,
         };
 
         if (tokenUsage) {
@@ -285,8 +285,8 @@ export async function runConversation(
         opts.onEvent({ type: "turn_complete", turn });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        log.error("conversation", `Turn failed for ${counsellor.frontmatter.name} (round ${round}, model ${counsellor.frontmatter.model ?? "default"}, backend ${counsellor.frontmatter.backend})`, err);
-        opts.onEvent({ type: "error", counsellorName: counsellor.frontmatter.name, error: message });
+        log.error("conversation", `Turn failed for ${councilor.frontmatter.name} (round ${round}, model ${councilor.frontmatter.model ?? "default"}, backend ${councilor.frontmatter.backend})`, err);
+        opts.onEvent({ type: "error", councilorName: councilor.frontmatter.name, error: message });
       }
     }
 

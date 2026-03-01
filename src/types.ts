@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CounsellorFrontmatterSchema = z.object({
+export const CouncilorFrontmatterSchema = z.object({
   name: z.string(),
   description: z.string(),
   interests: z.array(z.string()).default([]),
@@ -11,11 +11,11 @@ export const CounsellorFrontmatterSchema = z.object({
   avatar: z.string().optional(),
 });
 
-export type CounsellorFrontmatter = z.infer<typeof CounsellorFrontmatterSchema>;
+export type CouncilorFrontmatter = z.infer<typeof CouncilorFrontmatterSchema>;
 
-export interface Counsellor {
+export interface Councilor {
   id: string;
-  frontmatter: CounsellorFrontmatter;
+  frontmatter: CouncilorFrontmatter;
   systemPrompt: string;
   dirPath: string;
   avatarUrl?: string;
@@ -23,8 +23,8 @@ export interface Counsellor {
 
 export interface ConversationTurn {
   round: number;
-  counsellorId: string;
-  counsellorName: string;
+  councilorId: string;
+  councilorName: string;
   content: string;
   timestamp: string;
   model: string;
@@ -36,7 +36,7 @@ export interface ConversationTurn {
 export interface ConversationResult {
   topic: string;
   topicSource: "inline" | "file";
-  counsellors: Array<{
+  councilors: Array<{
     id: string;
     name: string;
     description: string;
@@ -92,8 +92,8 @@ export interface BackendConfig {
   baseUrl?: string;
 }
 
-export interface CounsellorRegistryEntry {
-  path: string;            // absolute path to counsellor directory
+export interface CouncilorRegistryEntry {
+  path: string;            // absolute path to councilor directory
   source: "local" | "git";
   url?: string;            // git origin, if cloned
   addedAt: string;         // ISO timestamp
@@ -101,7 +101,9 @@ export interface CounsellorRegistryEntry {
 
 export interface CouncilConfig {
   backends: Partial<Record<string, BackendConfig>>;
-  counsellors?: Record<string, CounsellorRegistryEntry>;
+  councilors?: Record<string, CouncilorRegistryEntry>;
+  /** @deprecated Use councilors */
+  counsellors?: Record<string, CouncilorRegistryEntry>;
   secretary?: {
     backend: string;
     model?: string;
@@ -111,18 +113,18 @@ export interface CouncilConfig {
     backend: "openai" | "google";
   };
   defaults?: {
-    counsellorIds?: string[];
+    councilorIds?: string[];
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
   };
 }
 
 export type ConversationEvent =
-  | { type: "turn_start"; round: number; counsellorName: string }
-  | { type: "turn_chunk"; counsellorName: string; delta: string }
+  | { type: "turn_start"; round: number; councilorName: string }
+  | { type: "turn_chunk"; councilorName: string; delta: string }
   | { type: "turn_complete"; turn: ConversationTurn }
   | { type: "round_complete"; round: number }
-  | { type: "error"; counsellorName: string; error: string }
+  | { type: "error"; councilorName: string; error: string }
   | { type: "summary_start" }
   | { type: "summary_chunk"; delta: string }
   | { type: "summary_complete"; summary: string; diagram?: unknown[] }

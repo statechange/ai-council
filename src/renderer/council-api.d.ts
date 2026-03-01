@@ -4,13 +4,13 @@ export interface HistoryEntry {
   id: string;
   topic: string;
   title?: string;
-  counsellors: string[];
+  councilors: string[];
   rounds: number;
   startedAt: string;
   completedAt: string;
 }
 
-export interface CounsellorSummary {
+export interface CouncilorSummary {
   id: string;
   dirPath: string;
   name: string;
@@ -24,7 +24,7 @@ export interface CounsellorSummary {
   registryUrl?: string;
 }
 
-export interface CounsellorDetail {
+export interface CouncilorDetail {
   frontmatter: Record<string, unknown>;
   body: string;
   raw: string;
@@ -46,11 +46,11 @@ export type DiscussionEvent =
 
 export interface CouncilAPI {
   getCouncilDir(): Promise<string>;
-  listCounsellors(councilDir: string): Promise<CounsellorSummary[]>;
-  getCounsellor(dirPath: string): Promise<CounsellorDetail>;
-  saveCounsellor(dirPath: string, aboutMd: string): Promise<{ success: boolean }>;
-  createCounsellor(councilDir: string, id: string, aboutMd: string): Promise<{ success: boolean; dirPath: string }>;
-  deleteCounsellor(dirPath: string): Promise<{ success: boolean }>;
+  listCouncilors(councilDir: string): Promise<CouncilorSummary[]>;
+  getCouncilor(dirPath: string): Promise<CouncilorDetail>;
+  saveCouncilor(dirPath: string, aboutMd: string): Promise<{ success: boolean }>;
+  createCouncilor(councilDir: string, id: string, aboutMd: string): Promise<{ success: boolean; dirPath: string }>;
+  deleteCouncilor(dirPath: string): Promise<{ success: boolean }>;
   getConfig(): Promise<{ config: CouncilConfig; envStatus: Record<string, boolean>; envKeySuffix: Record<string, string | undefined>; defaultUrls: Record<string, string> }>;
   saveConfig(config: CouncilConfig): Promise<{ success: boolean }>;
   probeBackend(name: string, config: { apiKey?: string; baseUrl?: string }): Promise<{ connected: boolean; models: string[]; error?: string }>;
@@ -58,7 +58,7 @@ export interface CouncilAPI {
     topic: string;
     topicSource: "inline" | "file";
     councilDir: string;
-    counsellorIds?: string[];
+    councilorIds?: string[];
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";

@@ -7,7 +7,7 @@ import type { Page } from "../App";
 const navItems: { page: Page; label: string; icon: React.ElementType }[] = [
   { page: "discussion", label: "Discussion", icon: MessageSquare },
   { page: "history", label: "History", icon: Clock },
-  { page: "counsellors", label: "Counsellors", icon: Users },
+  { page: "councilors", label: "Councilors", icon: Users },
   { page: "settings", label: "Settings", icon: Settings },
 ];
 

@@ -4,14 +4,14 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-interface AddCounsellorDialogProps {
+interface AddCouncilorDialogProps {
   onClose: () => void;
   onAdded: () => void;
 }
 
 type Tab = "local" | "git";
 
-export function AddCounsellorDialog({ onClose, onAdded }: AddCounsellorDialogProps) {
+export function AddCouncilorDialog({ onClose, onAdded }: AddCouncilorDialogProps) {
   const [tab, setTab] = useState<Tab>("local");
   const [localPath, setLocalPath] = useState("");
   const [gitUrl, setGitUrl] = useState("");
@@ -59,7 +59,7 @@ export function AddCounsellorDialog({ onClose, onAdded }: AddCounsellorDialogPro
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-background border rounded-lg shadow-lg w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Add Counsellor</h2>
+          <h2 className="text-lg font-semibold">Add Councilor</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -91,12 +91,12 @@ export function AddCounsellorDialog({ onClose, onAdded }: AddCounsellorDialogPro
           {/* Local path tab */}
           {tab === "local" && (
             <div className="space-y-2">
-              <Label>Counsellor Directory</Label>
+              <Label>Councilor Directory</Label>
               <div className="flex gap-2">
                 <Input
                   value={localPath}
                   onChange={(e) => setLocalPath(e.target.value)}
-                  placeholder="/path/to/counsellor"
+                  placeholder="/path/to/councilor"
                   className="flex-1"
                 />
                 <Button variant="outline" onClick={handleBrowse}>
@@ -116,10 +116,10 @@ export function AddCounsellorDialog({ onClose, onAdded }: AddCounsellorDialogPro
               <Input
                 value={gitUrl}
                 onChange={(e) => setGitUrl(e.target.value)}
-                placeholder="https://github.com/user/counsellor.git"
+                placeholder="https://github.com/user/councilor.git"
               />
               <p className="text-xs text-muted-foreground">
-                Will be cloned to ~/.ai-council/counsellors/
+                Will be cloned to ~/.ai-council/councilors/
               </p>
             </div>
           )}

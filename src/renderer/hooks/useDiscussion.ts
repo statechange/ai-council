@@ -57,7 +57,7 @@ export function useDiscussion() {
     topic: string;
     topicSource: "inline" | "file";
     councilDir: string;
-    counsellorIds?: string[];
+    councilorIds?: string[];
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
@@ -92,24 +92,24 @@ export function useDiscussion() {
         switch (event.type) {
           case "turn_start": {
             const sc = { ...prev.streamingContent };
-            sc[event.counsellorName] = "";
+            sc[event.councilorName] = "";
             return {
               ...prev,
               currentRound: event.round,
-              currentSpeaker: event.counsellorName,
+              currentSpeaker: event.councilorName,
               streamingContent: sc,
             };
           }
           case "turn_chunk": {
             const sc = { ...prev.streamingContent };
-            sc[event.counsellorName] = (sc[event.counsellorName] ?? "") + event.delta;
+            sc[event.councilorName] = (sc[event.councilorName] ?? "") + event.delta;
             return { ...prev, streamingContent: sc };
           }
           case "turn_complete": {
             const newTurns = [...prev.turns, event.turn];
             const usage = event.turn.tokenUsage;
             const sc = { ...prev.streamingContent };
-            delete sc[event.turn.counsellorName];
+            delete sc[event.turn.councilorName];
             return {
               ...prev,
               turns: newTurns,

@@ -5,8 +5,8 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { loadCounsellors, loadSpecificCounsellors } from "../core/counsellor-loader.js";
-import { getRegisteredPaths } from "../core/counsellor-registry.js";
+import { loadCouncilors, loadSpecificCouncilors } from "../core/councilor-loader.js";
+import { getRegisteredPaths } from "../core/councilor-registry.js";
 import { runConversation } from "../core/conversation-engine.js";
 import { writeOutput } from "../core/output-formatter.js";
 import { saveToHistory } from "../core/history.js";
@@ -18,7 +18,7 @@ import type { ConversationEvent, ConversationTurn, CouncilConfig } from "../type
 interface Props {
   topic: string;
   councilDir: string;
-  counsellorPaths?: string[];
+  councilorPaths?: string[];
   rounds: number;
   outputDir: string;
   format: "md" | "json" | "both";
@@ -29,14 +29,14 @@ interface Props {
 export function DiscussCommand({
   topic,
   councilDir,
-  counsellorPaths,
+  councilorPaths,
   rounds,
   outputDir,
   format,
   infographic: generateInfographicFlag,
   mode = "freeform",
 }: Props) {
-  const [status, setStatus] = useState("Loading counsellors...");
+  const [status, setStatus] = useState("Loading councilors...");
   const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
   const [completedTurns, setCompletedTurns] = useState<ConversationTurn[]>([]);
@@ -60,7 +60,7 @@ export function DiscussCommand({
           topicSource = "file";
         }
 
-        // Load config and counsellors
+        // Load config and councilors
         let cfg: CouncilConfig = { backends: {} };
         let registeredPaths: string[] = [];
         try {
@@ -70,20 +70,20 @@ export function DiscussCommand({
           registeredPaths = getRegisteredPaths(cfg);
         } catch { /* no config */ }
 
-        const counsellors = counsellorPaths?.length
-          ? await loadSpecificCounsellors(counsellorPaths)
-          : await loadCounsellors(councilDir, registeredPaths);
+        const councilors = councilorPaths?.length
+          ? await loadSpecificCouncilors(councilorPaths)
+          : await loadCouncilors(councilDir, registeredPaths);
 
         setStatus(
-          `Starting ${mode === "debate" ? "debate" : "discussion"} with ${counsellors.length} counsellor${counsellors.length > 1 ? "s" : ""} over ${rounds} round${rounds > 1 ? "s" : ""}`,
+          `Starting ${mode === "debate" ? "debate" : "discussion"} with ${councilors.length} councilor${councilors.length > 1 ? "s" : ""} over ${rounds} round${rounds > 1 ? "s" : ""}`,
         );
 
         const onEvent = (event: ConversationEvent) => {
           switch (event.type) {
             case "turn_start":
               setCurrentRound(event.round);
-              setCurrentSpeaker(event.counsellorName);
-              setStatus(`Round ${event.round} — ${event.counsellorName} is speaking...`);
+              setCurrentSpeaker(event.councilorName);
+              setStatus(`Round ${event.round} — ${event.councilorName} is speaking...`);
               break;
             case "turn_complete":
               setCompletedTurns((prev) => [...prev, event.turn]);
@@ -104,7 +104,7 @@ export function DiscussCommand({
               setActiveRoundSummary("");
               break;
             case "error":
-              setError(`Error from ${event.counsellorName}: ${event.error}`);
+              setError(`Error from ${event.councilorName}: ${event.error}`);
               break;
           }
         };
@@ -112,7 +112,7 @@ export function DiscussCommand({
         const result = await runConversation({
           topic: resolvedTopic,
           topicSource,
-          counsellors,
+          councilors,
           rounds,
           onEvent,
           mode,
@@ -233,7 +233,7 @@ export function DiscussCommand({
         <Box flexDirection="column" marginTop={1}>
           {completedTurns.slice(-3).map((turn, i) => (
             <Text key={i} dimColor>
-              Round {turn.round} — {turn.counsellorName}: {turn.content.slice(0, 80)}...
+              Round {turn.round} — {turn.councilorName}: {turn.content.slice(0, 80)}...
             </Text>
           ))}
         </Box>

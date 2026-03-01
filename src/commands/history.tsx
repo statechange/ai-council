@@ -52,13 +52,13 @@ export function HistoryCommand({ id }: Props) {
       <Box flexDirection="column" paddingY={1}>
         <Text bold>Topic: {detail.topic}</Text>
         <Text dimColor>
-          {detail.counsellors.map(c => c.name).join(", ")} | {detail.rounds} round{detail.rounds > 1 ? "s" : ""} | {new Date(detail.startedAt).toLocaleString()}
+          {detail.councilors.map(c => c.name).join(", ")} | {detail.rounds} round{detail.rounds > 1 ? "s" : ""} | {new Date(detail.startedAt).toLocaleString()}
         </Text>
         <Box flexDirection="column" marginTop={1}>
           {detail.turns.map((turn, i) => (
             <Box key={i} flexDirection="column" marginBottom={1}>
               <Text bold color="cyan">
-                [{turn.counsellorName}] Round {turn.round}
+                [{turn.councilorName}] Round {turn.round}
               </Text>
               <Text>{turn.content}</Text>
             </Box>
@@ -83,7 +83,7 @@ export function HistoryCommand({ id }: Props) {
               {entry.topic.length > 60 ? "..." : ""}
             </Text>
             <Text dimColor>
-              {new Date(entry.startedAt).toLocaleString()} | {entry.counsellors.join(", ")} | {entry.rounds} round{entry.rounds > 1 ? "s" : ""}
+              {new Date(entry.startedAt).toLocaleString()} | {entry.councilors.join(", ")} | {entry.rounds} round{entry.rounds > 1 ? "s" : ""}
             </Text>
             <Text color="gray">ID: {entry.id}</Text>
           </Box>

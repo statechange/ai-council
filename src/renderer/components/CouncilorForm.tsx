@@ -6,10 +6,10 @@ import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { BackendIcon } from "./BackendIcon";
-import { CounsellorAvatar } from "./CounsellorAvatar";
-import type { CounsellorDetail } from "../council-api";
+import { CouncilorAvatar } from "./CouncilorAvatar";
+import type { CouncilorDetail } from "../council-api";
 
-interface CounsellorFormProps {
+interface CouncilorFormProps {
   dirPath: string | null;
   isNew: boolean;
   onSave: (dirPath: string | null, id: string, aboutMd: string) => void;
@@ -26,7 +26,7 @@ function shortenPath(p: string): string {
   return p;
 }
 
-export function CounsellorForm({ dirPath, isNew, onSave, onDelete, onClose }: CounsellorFormProps) {
+export function CouncilorForm({ dirPath, isNew, onSave, onDelete, onClose }: CouncilorFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [backend, setBackend] = useState("anthropic");
@@ -68,7 +68,7 @@ export function CounsellorForm({ dirPath, isNew, onSave, onDelete, onClose }: Co
 
   useEffect(() => {
     if (dirPath && !isNew) {
-      window.councilAPI.getCounsellor(dirPath).then((detail: CounsellorDetail) => {
+      window.councilAPI.getCouncilor(dirPath).then((detail: CouncilorDetail) => {
         const fm = detail.frontmatter;
         setName((fm.name as string) || "");
         setDescription((fm.description as string) || "");
@@ -128,18 +128,18 @@ export function CounsellorForm({ dirPath, isNew, onSave, onDelete, onClose }: Co
         {/* Left: back button spanning both rows */}
         <Button variant="ghost" size="sm" onClick={handleBack} className="gap-1.5 -ml-2 self-center shrink-0">
           <ArrowLeft className="h-4 w-4" />
-          Counsellors
+          Councilors
         </Button>
         <Separator orientation="vertical" className="self-stretch" />
         {/* Middle: avatar + title row + path row */}
-        <CounsellorAvatar
+        <CouncilorAvatar
           name={name || "?"}
           avatarUrl={avatar.trim() || undefined}
           size={32}
           className="self-center shrink-0"
         />
         <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-          <h2 className="text-lg font-semibold leading-tight">{isNew ? "New Counsellor" : name || "Edit Counsellor"}</h2>
+          <h2 className="text-lg font-semibold leading-tight">{isNew ? "New Councilor" : name || "Edit Councilor"}</h2>
           {!isNew && dirPath && (
             <div className="flex items-center gap-1 min-w-0">
               <button
@@ -181,7 +181,7 @@ export function CounsellorForm({ dirPath, isNew, onSave, onDelete, onClose }: Co
             {isNew ? "Create" : "Save"}
           </Button>
           {!isNew && dirPath && (
-            <Button variant="destructive" size="sm" onClick={() => { if (confirm("Delete this counsellor?")) onDelete(dirPath); }}>
+            <Button variant="destructive" size="sm" onClick={() => { if (confirm("Delete this councilor?")) onDelete(dirPath); }}>
               <Trash2 className="h-4 w-4 mr-1.5" />
               Delete
             </Button>
@@ -237,7 +237,7 @@ export function CounsellorForm({ dirPath, isNew, onSave, onDelete, onClose }: Co
             <div className="space-y-1.5">
               <Label>Avatar</Label>
               <div className="flex items-center gap-3">
-                <CounsellorAvatar
+                <CouncilorAvatar
                   name={name || "?"}
                   avatarUrl={avatar.trim() || undefined}
                   size={40}
@@ -250,7 +250,7 @@ export function CounsellorForm({ dirPath, isNew, onSave, onDelete, onClose }: Co
                 />
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Enter a URL (https://...) or a file path relative to the counsellor folder. Leave empty for default initial.
+                Enter a URL (https://...) or a file path relative to the councilor folder. Leave empty for default initial.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">

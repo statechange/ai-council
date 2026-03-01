@@ -1,4 +1,4 @@
-import type { CounsellorSummary } from "../council-api";
+import type { CouncilorSummary } from "../council-api";
 import type { CouncilConfig } from "../../types";
 
 const ENV_VAR_FOR_BACKEND: Record<string, string> = {
@@ -7,13 +7,13 @@ const ENV_VAR_FOR_BACKEND: Record<string, string> = {
   google: "GOOGLE_API_KEY",
 };
 
-export function getCounsellorIssues(
-  counsellor: CounsellorSummary,
+export function getCouncilorIssues(
+  councilor: CouncilorSummary,
   config: CouncilConfig,
   envStatus: Record<string, boolean>,
 ): string[] {
   const issues: string[] = [];
-  const backend = counsellor.backend;
+  const backend = councilor.backend;
 
   if (backend !== "ollama") {
     const envVar = ENV_VAR_FOR_BACKEND[backend];

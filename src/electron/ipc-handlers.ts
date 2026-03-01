@@ -5,13 +5,13 @@ import { promisify } from "node:util";
 import { join, basename, resolve } from "node:path";
 import { homedir } from "node:os";
 import matter from "gray-matter";
-import { loadCounsellors } from "../core/counsellor-loader.js";
+import { loadCouncilors } from "../core/councilor-loader.js";
 import {
   getRegisteredPaths,
-  addLocalCounsellor,
-  addRemoteCounsellor,
-  removeCounsellor,
-} from "../core/counsellor-registry.js";
+  addLocalCouncilor,
+  addRemoteCouncilor,
+  removeCouncilor,
+} from "../core/councilor-registry.js";
 import { runConversation, type RunConversationOptions } from "../core/conversation-engine.js";
 import { clearCaches } from "../backends/index.js";
 import { saveToHistory, listHistory, getHistoryEntry, deleteHistoryEntry, addInfographicToHistory, deleteInfographicFromHistory } from "../core/history.js";
@@ -140,9 +140,9 @@ export function registerIpcHandlers(
     return resolve(cwd, "council");
   });
 
-  // --- Counsellor CRUD ---
+  // --- Councilor CRUD ---
 
-  ipcMain.handle("counsellors:list", async (_event, councilDir: string) => {
+  ipcMain.handle("councilors:list", async (_event, councilDir: string) => {
     const configPath = join(homedir(), ".ai-council", "config.json");
     let config: CouncilConfig = { backends: {} };
     try {
@@ -150,9 +150,9 @@ export function registerIpcHandlers(
       config = JSON.parse(raw);
     } catch { /* no config */ }
     const registeredPaths = getRegisteredPaths(config);
-    const registry = config.counsellors ?? {};
-    const counsellors = await loadCounsellors(councilDir, registeredPaths);
-    return counsellors.map((c) => {
+    const registry = config.councilors ?? {};
+    const councilors = await loadCouncilors(councilDir, registeredPaths);
+    return councilors.map((c) => {
       const regEntry = registry[c.id];
       return {
         id: c.id,
@@ -170,27 +170,27 @@ export function registerIpcHandlers(
     });
   });
 
-  ipcMain.handle("counsellors:get", async (_event, dirPath: string) => {
+  ipcMain.handle("councilors:get", async (_event, dirPath: string) => {
     const aboutPath = join(dirPath, "ABOUT.md");
     const raw = await readFile(aboutPath, "utf-8");
     const { data, content } = matter(raw);
     return { frontmatter: data, body: content.trim(), raw };
   });
 
-  ipcMain.handle("counsellors:save", async (_event, dirPath: string, aboutMd: string) => {
+  ipcMain.handle("councilors:save", async (_event, dirPath: string, aboutMd: string) => {
     const aboutPath = join(dirPath, "ABOUT.md");
     await writeFile(aboutPath, aboutMd, "utf-8");
     return { success: true };
   });
 
-  ipcMain.handle("counsellors:create", async (_event, councilDir: string, id: string, aboutMd: string) => {
+  ipcMain.handle("councilors:create", async (_event, councilDir: string, id: string, aboutMd: string) => {
     const dirPath = join(councilDir, id);
     await mkdir(dirPath, { recursive: true });
     await writeFile(join(dirPath, "ABOUT.md"), aboutMd, "utf-8");
     return { success: true, dirPath };
   });
 
-  ipcMain.handle("counsellors:delete", async (_event, dirPath: string) => {
+  ipcMain.handle("councilors:delete", async (_event, dirPath: string) => {
     await rm(dirPath, { recursive: true, force: true });
     return { success: true };
   });
@@ -241,7 +241,7 @@ export function registerIpcHandlers(
     topic: string;
     topicSource: "inline" | "file";
     councilDir: string;
-    counsellorIds?: string[];
+    councilorIds?: string[];
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
@@ -265,7 +265,7 @@ export function registerIpcHandlers(
     activeAbortController = new AbortController();
     injectionBuffer = [];
 
-    log.info("ipc:discussion", "Starting discussion", { councilDir: params.councilDir, counsellorIds: params.counsellorIds, rounds: params.rounds, mode: params.mode });
+    log.info("ipc:discussion", "Starting discussion", { councilDir: params.councilDir, councilorIds: params.councilorIds, rounds: params.rounds, mode: params.mode });
 
     const configPath = join(homedir(), ".ai-council", "config.json");
     let config: CouncilConfig = { backends: {} };
@@ -274,16 +274,16 @@ export function registerIpcHandlers(
       config = JSON.parse(raw);
     } catch { /* no config */ }
     const registeredPaths = getRegisteredPaths(config);
-    log.info("ipc:discussion", `Loading counsellors from ${params.councilDir} + ${registeredPaths.length} registered paths`);
-    const allCounsellors = await loadCounsellors(params.councilDir, registeredPaths);
-    const counsellors = params.counsellorIds?.length
-      ? allCounsellors.filter((c) => params.counsellorIds!.includes(c.id))
-      : allCounsellors;
+    log.info("ipc:discussion", `Loading councilors from ${params.councilDir} + ${registeredPaths.length} registered paths`);
+    const allCouncilors = await loadCouncilors(params.councilDir, registeredPaths);
+    const councilors = params.councilorIds?.length
+      ? allCouncilors.filter((c) => params.councilorIds!.includes(c.id))
+      : allCouncilors;
 
-    log.info("ipc:discussion", `Resolved ${counsellors.length} counsellors: ${counsellors.map(c => c.id).join(", ")}`);
+    log.info("ipc:discussion", `Resolved ${councilors.length} councilors: ${councilors.map(c => c.id).join(", ")}`);
 
-    if (counsellors.length === 0) {
-      send({ type: "error", counsellorName: "", error: "No counsellors found" });
+    if (councilors.length === 0) {
+      send({ type: "error", councilorName: "", error: "No councilors found" });
       return;
     }
 
@@ -292,8 +292,8 @@ export function registerIpcHandlers(
       const content = injectionBuffer.shift()!;
       return {
         round: 0,
-        counsellorId: "__user__",
-        counsellorName: "You",
+        councilorId: "__user__",
+        councilorName: "You",
         content,
         timestamp: new Date().toISOString(),
         model: "human",
@@ -305,7 +305,7 @@ export function registerIpcHandlers(
     const opts: RunConversationOptions = {
       topic: params.topic,
       topicSource: params.topicSource,
-      counsellors,
+      councilors,
       rounds: params.rounds,
       onEvent: send,
       beforeTurn,
@@ -336,7 +336,7 @@ export function registerIpcHandlers(
           send({ type: "summary_complete", summary: secretaryResult.text, diagram: secretaryResult.diagram } as any);
         } catch (err) {
           log.error("ipc:discussion", "Secretary summary failed", err);
-          send({ type: "error", counsellorName: "Secretary", error: err instanceof Error ? err.message : String(err) });
+          send({ type: "error", councilorName: "Secretary", error: err instanceof Error ? err.message : String(err) });
         }
       }
 
@@ -381,7 +381,7 @@ export function registerIpcHandlers(
       }
     } catch (err) {
       log.error("ipc:discussion", "Discussion failed", err);
-      send({ type: "error", counsellorName: "", error: err instanceof Error ? err.message : String(err) });
+      send({ type: "error", councilorName: "", error: err instanceof Error ? err.message : String(err) });
     } finally {
       activeAbortController = null;
     }
@@ -400,18 +400,18 @@ export function registerIpcHandlers(
     return { success: true };
   });
 
-  // --- Counsellor Registry ---
+  // --- Councilor Registry ---
 
   ipcMain.handle("registry:add-local", async (_event, dirPath: string) => {
-    return addLocalCounsellor(dirPath);
+    return addLocalCouncilor(dirPath);
   });
 
   ipcMain.handle("registry:add-remote", async (_event, url: string) => {
-    return addRemoteCounsellor(url);
+    return addRemoteCouncilor(url);
   });
 
   ipcMain.handle("registry:remove", async (_event, id: string, deleteFiles?: boolean) => {
-    await removeCounsellor(id, deleteFiles);
+    await removeCouncilor(id, deleteFiles);
     return { success: true };
   });
 

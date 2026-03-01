@@ -1,6 +1,6 @@
 ---
 name: council-manage
-description: Manage AI Council counsellors and discussions from the command line. Create, list, edit, and configure counsellors. Run discussions with topic selection and counsellor filtering. Use when the user wants to work with AI Council via CLI or needs help managing their council setup.
+description: Manage AI Council councilors (also spelled counsellors) and discussions from the command line. Create, list, edit, and configure councilors. Run discussions with topic selection and councilor filtering. Use when the user wants to work with AI Council via CLI or needs help managing their council setup.
 license: MIT
 metadata:
   author: ai-council
@@ -9,7 +9,7 @@ metadata:
 
 # Council Manage
 
-Manage AI Council counsellors and run discussions from the command line.
+Manage AI Council councilors and run discussions from the command line.
 
 ## Installation
 
@@ -23,20 +23,20 @@ Or run commands directly with `npx @statechange/council`.
 
 ## When to Use
 
-- The user wants to create, edit, or delete a counsellor
-- The user wants to list their counsellors and check their status
+- The user wants to create, edit, or delete a councilor
+- The user wants to list their councilors and check their status
 - The user wants to run a discussion from the CLI
 - The user asks about council configuration or troubleshooting
 
-## Counsellor Structure
+## Councilor Structure
 
-Each counsellor lives in its own directory with an `ABOUT.md` file containing YAML frontmatter and a system prompt. Counsellors are registered in `~/.ai-council/config.json` and can live anywhere on disk, but the conventional location is `~/.ai-council/counsellors/`:
+Each councilor lives in its own directory with an `ABOUT.md` file containing YAML frontmatter and a system prompt. Councilors are registered in `~/.ai-council/config.json` and can live anywhere on disk, but the conventional location is `~/.ai-council/councilors/`:
 
 ```
 ~/.ai-council/
-  config.json              # Stores registered counsellor paths + API keys
-  counsellors/
-    my-counsellor/
+  config.json              # Stores registered councilor paths + API keys
+  councilors/
+    my-councilor/
       ABOUT.md
 ```
 
@@ -45,7 +45,7 @@ Each counsellor lives in its own directory with an `ABOUT.md` file containing YA
 ```markdown
 ---
 name: "Display Name"
-description: "One-line description of this counsellor's perspective"
+description: "One-line description of this councilor's perspective"
 interests: ["topic1", "topic2", "topic3"]
 backend: "anthropic"          # anthropic | openai | google | ollama
 model: "claude-sonnet-4-5-20250929"  # optional, uses backend default if omitted
@@ -68,7 +68,7 @@ You are [name], a [description of role and personality].
 
 ## CLI Commands
 
-### List counsellors
+### List councilors
 
 ```bash
 council list
@@ -87,32 +87,32 @@ council discuss ./topics/architecture.md
 # With options
 council discuss "Topic" --rounds 3 --format md --output ./results
 
-# Specific counsellors only
-council discuss "Topic" --counsellors ./council/strategist ./council/critic
+# Specific councilors only
+council discuss "Topic" --councilors ./council/strategist ./council/critic
 ```
 
-### Manage counsellor registry
+### Manage councilor registry
 
 ```bash
-# Register a counsellor from a local directory
-council counsellor add ./path/to/counsellor
+# Register a councilor from a local directory
+council councilor add ./path/to/councilor
 
-# Register counsellor(s) from a git repository
-council counsellor add https://github.com/user/some-counsellor.git
+# Register councilor(s) from a git repository
+council councilor add https://github.com/user/some-councilor.git
 
-# List all registered counsellors
-council counsellor list
+# List all registered councilors
+council councilor list
 
-# Unregister a counsellor (--yes auto-deletes cloned files for git sources)
-council counsellor remove my-counsellor
-council counsellor remove my-counsellor --yes
+# Unregister a councilor (--yes auto-deletes cloned files for git sources)
+council councilor remove my-councilor
+council councilor remove my-councilor --yes
 ```
 
-Registered counsellors are stored in `~/.ai-council/config.json` under the `counsellors` key. Git-cloned counsellors are placed at `~/.ai-council/counsellors/<name>/`.
+Registered councilors are stored in `~/.ai-council/config.json` under the `councilors` key. Git-cloned councilors are placed at `~/.ai-council/councilors/<name>/`.
 
 URL detection: paths starting with `http://`, `https://`, or ending with `.git` are treated as git URLs; everything else is a local path.
 
-Multi-counsellor repos: if the cloned root has no `ABOUT.md`, child directories are scanned for counsellors.
+Multi-councilor repos: if the cloned root has no `ABOUT.md`, child directories are scanned for councilors.
 
 ### Check configuration
 
@@ -122,20 +122,20 @@ council config scan     # Find API keys
 council config import   # Import found keys
 ```
 
-## Creating a New Counsellor
+## Creating a New Councilor
 
-To create a new counsellor:
+To create a new councilor:
 
-1. Create a directory: `mkdir -p ~/.ai-council/counsellors/new-counsellor`
-2. Create `~/.ai-council/counsellors/new-counsellor/ABOUT.md` with the frontmatter and system prompt
-3. Register it: `council counsellor add ~/.ai-council/counsellors/new-counsellor`
-4. Verify with `council counsellor list`
+1. Create a directory: `mkdir -p ~/.ai-council/councilors/new-councilor`
+2. Create `~/.ai-council/councilors/new-councilor/ABOUT.md` with the frontmatter and system prompt
+3. Register it: `council councilor add ~/.ai-council/councilors/new-councilor`
+4. Verify with `council councilor list`
 
-**Important:** Always create counsellors in `~/.ai-council/counsellors/` and register them — never in a project's local `./council/` directory. The `~/.ai-council/` location ensures counsellors are available globally regardless of working directory.
+**Important:** Always create councilors in `~/.ai-council/councilors/` and register them — never in a project's local `./council/` directory. The `~/.ai-council/` location ensures councilors are available globally regardless of working directory.
 
-### Building a Counsellor from Source Material
+### Building a Councilor from Source Material
 
-When creating a counsellor based on a real person, historical figure, or body of work, the ABOUT.md should have three distinct layers:
+When creating a councilor based on a real person, historical figure, or body of work, the ABOUT.md should have three distinct layers:
 
 **Layer 1: Frontmatter** — identity and metadata:
 ```yaml
@@ -156,9 +156,9 @@ avatar: "avatar.jpg"  # local file preferred; DiceBear URL as fallback for gener
 - Set a **personality/style note** (e.g. rhetorically forceful, measured and empirical, provocative but grounded)
 - End with: "Keep your responses focused and substantive. Aim for 2-4 paragraphs per turn."
 
-**Layer 3: Reference material** — the bulk source text appended below. Separated by a markdown horizontal rule and a heading like `## Reference Material: [Title]`. Include a one-line instruction telling the counsellor to draw on this material. Then the full text.
+**Layer 3: Reference material** — the bulk source text appended below. Separated by a markdown horizontal rule and a heading like `## Reference Material: [Title]`. Include a one-line instruction telling the councilor to draw on this material. Then the full text.
 
-#### Build Process for Source-Material Counsellors
+#### Build Process for Source-Material Councilors
 
 Because pasting large reference texts directly into an LLM output can trigger content filtering, use a **concatenation approach**:
 
@@ -176,21 +176,21 @@ Because pasting large reference texts directly into an LLM output can trigger co
 
 4. **Concatenate** header + body into the final ABOUT.md:
    ```bash
-   mkdir -p ~/.ai-council/counsellors/new-counsellor
-   cat /tmp/header.md /tmp/source-body.txt > ~/.ai-council/counsellors/new-counsellor/ABOUT.md
+   mkdir -p ~/.ai-council/councilors/new-councilor
+   cat /tmp/header.md /tmp/source-body.txt > ~/.ai-council/councilors/new-councilor/ABOUT.md
    ```
 
-5. **Register** the counsellor:
+5. **Register** the councilor:
    ```bash
-   council counsellor add ~/.ai-council/counsellors/new-counsellor
+   council councilor add ~/.ai-council/councilors/new-councilor
    ```
 
 This keeps the authored content (which goes through the LLM) small, and the bulk reference text is handled entirely through file operations.
 
 #### Tips
 
-- **Interests**: Pick 5-8 terms that reflect the counsellor's core domains. These appear as tags in the UI and help users understand what the counsellor brings.
-- **Avatar**: Prefer a real image of the person or what they're most associated with. For historical figures, authors, philosophers etc., download a public-domain portrait from Wikimedia Commons into the counsellor directory as `avatar.jpg` (use the Wikipedia API to find a thumbnail URL, then `curl -o ~/.ai-council/counsellors/<name>/avatar.jpg <url>`). Set `avatar: "avatar.jpg"` in frontmatter — relative paths are resolved automatically. Only fall back to DiceBear (`https://api.dicebear.com/9.x/personas/svg?seed=SlugHere&backgroundColor=hexWithoutHash`) for fictional or generic personas where no real image applies.
+- **Interests**: Pick 5-8 terms that reflect the councilor's core domains. These appear as tags in the UI and help users understand what the councilor brings.
+- **Avatar**: Prefer a real image of the person or what they're most associated with. For historical figures, authors, philosophers etc., download a public-domain portrait from Wikimedia Commons into the councilor directory as `avatar.jpg` (use the Wikipedia API to find a thumbnail URL, then `curl -o ~/.ai-council/councilors/<name>/avatar.jpg <url>`). Set `avatar: "avatar.jpg"` in frontmatter — relative paths are resolved automatically. Only fall back to DiceBear (`https://api.dicebear.com/9.x/personas/svg?seed=SlugHere&backgroundColor=hexWithoutHash`) for fictional or generic personas where no real image applies.
 - **Temperature**: 0.7 is a good default. Go higher (0.8-0.9) for creative/provocative thinkers, lower (0.5-0.6) for analytical/precise ones.
 - **Source material size**: The full Communist Manifesto (~77KB) works fine. Larger texts will too but may increase token costs per discussion turn. Consider excerpting if a source exceeds ~200KB.
 - **Multiple sources**: You can append several reference texts with separate `## Reference Material:` headings.
@@ -198,7 +198,7 @@ This keeps the authored content (which goes through the LLM) small, and the bulk
 
 ## Troubleshooting
 
-### Counsellor shows as red / has issues
+### Councilor shows as red / has issues
 
 Usually means the backend API key is missing. Fix with:
 ```bash
@@ -221,5 +221,5 @@ council gui            # Launch from current directory
 council gui ~/projects # Launch with a specific working directory
 ```
 - **Settings page**: Configure API keys, test connections, see available models
-- **Counsellors page**: Browse, create, edit, delete counsellors with a form editor
-- **Discussion page**: Start discussions with counsellor selection and real-time streaming
+- **Councilors page**: Browse, create, edit, delete councilors with a form editor
+- **Discussion page**: Start discussions with councilor selection and real-time streaming

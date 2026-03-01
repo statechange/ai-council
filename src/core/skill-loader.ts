@@ -4,8 +4,8 @@ import { homedir } from "node:os";
 import { existsSync } from "node:fs";
 import matter from "gray-matter";
 
-const searchPaths = (counsellorDir: string, skillName: string): string[] => [
-  join(counsellorDir, "skills", skillName, "SKILL.md"),
+const searchPaths = (councilorDir: string, skillName: string): string[] => [
+  join(councilorDir, "skills", skillName, "SKILL.md"),
   join(process.cwd(), ".claude", "skills", skillName, "SKILL.md"),
   join(homedir(), ".agents", "skills", skillName, "SKILL.md"),
   join(homedir(), ".claude", "skills", skillName, "SKILL.md"),
@@ -13,9 +13,9 @@ const searchPaths = (counsellorDir: string, skillName: string): string[] => [
 
 export async function resolveSkill(
   skillName: string,
-  counsellorDir: string,
+  councilorDir: string,
 ): Promise<string | null> {
-  for (const candidate of searchPaths(counsellorDir, skillName)) {
+  for (const candidate of searchPaths(councilorDir, skillName)) {
     if (existsSync(candidate)) {
       const raw = await readFile(candidate, "utf-8");
       const { content } = matter(raw);
@@ -27,11 +27,11 @@ export async function resolveSkill(
 
 export async function resolveSkills(
   skillNames: string[],
-  counsellorDir: string,
+  councilorDir: string,
 ): Promise<string> {
   const sections: string[] = [];
   for (const name of skillNames) {
-    const content = await resolveSkill(name, counsellorDir);
+    const content = await resolveSkill(name, councilorDir);
     if (content) {
       sections.push(`## Skill: ${name}\n\n${content}`);
     }

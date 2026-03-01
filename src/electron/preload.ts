@@ -4,20 +4,20 @@ const councilAPI = {
   getCouncilDir: () =>
     ipcRenderer.invoke("app:getCouncilDir") as Promise<string>,
 
-  listCounsellors: (councilDir: string) =>
-    ipcRenderer.invoke("counsellors:list", councilDir),
+  listCouncilors: (councilDir: string) =>
+    ipcRenderer.invoke("councilors:list", councilDir),
 
-  getCounsellor: (dirPath: string) =>
-    ipcRenderer.invoke("counsellors:get", dirPath),
+  getCouncilor: (dirPath: string) =>
+    ipcRenderer.invoke("councilors:get", dirPath),
 
-  saveCounsellor: (dirPath: string, aboutMd: string) =>
-    ipcRenderer.invoke("counsellors:save", dirPath, aboutMd),
+  saveCouncilor: (dirPath: string, aboutMd: string) =>
+    ipcRenderer.invoke("councilors:save", dirPath, aboutMd),
 
-  createCounsellor: (councilDir: string, id: string, aboutMd: string) =>
-    ipcRenderer.invoke("counsellors:create", councilDir, id, aboutMd),
+  createCouncilor: (councilDir: string, id: string, aboutMd: string) =>
+    ipcRenderer.invoke("councilors:create", councilDir, id, aboutMd),
 
-  deleteCounsellor: (dirPath: string) =>
-    ipcRenderer.invoke("counsellors:delete", dirPath),
+  deleteCouncilor: (dirPath: string) =>
+    ipcRenderer.invoke("councilors:delete", dirPath),
 
   getConfig: () =>
     ipcRenderer.invoke("config:get"),
@@ -32,7 +32,7 @@ const councilAPI = {
     topic: string;
     topicSource: "inline" | "file";
     councilDir: string;
-    counsellorIds?: string[];
+    councilorIds?: string[];
     rounds: number;
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";

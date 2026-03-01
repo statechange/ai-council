@@ -2,7 +2,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { join, basename, resolve } from "node:path";
 import { existsSync } from "node:fs";
 import matter from "gray-matter";
-import { CounsellorFrontmatterSchema, type Counsellor } from "../types.js";
+import { CouncilorFrontmatterSchema, type Councilor } from "../types.js";
 import { resolveSkills } from "./skill-loader.js";
 
 function resolveAvatar(avatar: string | undefined, dirPath: string): string | undefined {
@@ -12,13 +12,13 @@ function resolveAvatar(avatar: string | undefined, dirPath: string): string | un
   return `council-file://${absPath}`;
 }
 
-async function resolveReferences(content: string, counsellorDir: string): Promise<string> {
+async function resolveReferences(content: string, councilorDir: string): Promise<string> {
   const refPattern = /\{\{(.+?)\}\}/g;
   let resolved = content;
 
   for (const match of content.matchAll(refPattern)) {
     const refPath = match[1]!.trim();
-    const fullPath = join(counsellorDir, refPath);
+    const fullPath = join(councilorDir, refPath);
     if (existsSync(fullPath)) {
       const refContent = await readFile(fullPath, "utf-8");
       resolved = resolved.replace(match[0], refContent.trim());
@@ -30,7 +30,7 @@ async function resolveReferences(content: string, counsellorDir: string): Promis
   return resolved;
 }
 
-export async function loadSingleCounsellor(dirPath: string): Promise<Counsellor> {
+export async function loadSingleCouncilor(dirPath: string): Promise<Councilor> {
   const absPath = resolve(dirPath);
   const aboutPath = join(absPath, "ABOUT.md");
   if (!existsSync(aboutPath)) {
@@ -40,7 +40,7 @@ export async function loadSingleCounsellor(dirPath: string): Promise<Counsellor>
   const raw = await readFile(aboutPath, "utf-8");
   const { data, content } = matter(raw);
 
-  const frontmatter = CounsellorFrontmatterSchema.parse(data);
+  const frontmatter = CouncilorFrontmatterSchema.parse(data);
 
   let systemPrompt = await resolveReferences(content.trim(), absPath);
 
@@ -60,25 +60,25 @@ export async function loadSingleCounsellor(dirPath: string): Promise<Counsellor>
   };
 }
 
-export async function loadCounsellors(
+export async function loadCouncilors(
   councilDir: string,
   registeredPaths?: string[],
-): Promise<Counsellor[]> {
-  const counsellors: Counsellor[] = [];
+): Promise<Councilor[]> {
+  const councilors: Councilor[] = [];
   const seenIds = new Set<string>();
 
-  // Load registered counsellors first (they win on dedup)
+  // Load registered councilors first (they win on dedup)
   if (registeredPaths?.length) {
     for (const rPath of registeredPaths) {
       if (!existsSync(join(rPath, "ABOUT.md"))) continue;
       try {
-        const c = await loadSingleCounsellor(rPath);
+        const c = await loadSingleCouncilor(rPath);
         if (!seenIds.has(c.id)) {
-          counsellors.push(c);
+          councilors.push(c);
           seenIds.add(c.id);
         }
       } catch {
-        // skip invalid registered counsellors
+        // skip invalid registered councilors
       }
     }
   }
@@ -91,23 +91,23 @@ export async function loadCounsellors(
       const info = await stat(entryPath);
       if (info.isDirectory() && existsSync(join(entryPath, "ABOUT.md"))) {
         if (!seenIds.has(basename(entryPath))) {
-          counsellors.push(await loadSingleCounsellor(entryPath));
+          councilors.push(await loadSingleCouncilor(entryPath));
           seenIds.add(basename(entryPath));
         }
       }
     }
   }
 
-  if (counsellors.length === 0) {
+  if (councilors.length === 0) {
     throw new Error(
-      `No counsellors found. Searched ${councilDir}${registeredPaths?.length ? ` and ${registeredPaths.length} registered path(s)` : ""}.\n` +
-      `Create one with: mkdir -p ~/.ai-council/counsellors/my-counsellor && council counsellor add ~/.ai-council/counsellors/my-counsellor`,
+      `No councilors found. Searched ${councilDir}${registeredPaths?.length ? ` and ${registeredPaths.length} registered path(s)` : ""}.\n` +
+      `Create one with: mkdir -p ~/.ai-council/councilors/my-councilor && council councilor add ~/.ai-council/councilors/my-councilor`,
     );
   }
 
-  return counsellors;
+  return councilors;
 }
 
-export async function loadSpecificCounsellors(paths: string[]): Promise<Counsellor[]> {
-  return Promise.all(paths.map(loadSingleCounsellor));
+export async function loadSpecificCouncilors(paths: string[]): Promise<Councilor[]> {
+  return Promise.all(paths.map(loadSingleCouncilor));
 }

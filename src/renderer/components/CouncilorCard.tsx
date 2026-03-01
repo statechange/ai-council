@@ -4,11 +4,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui
 import { Badge } from "../ui/badge";
 import { cn } from "../lib/utils";
 import { BackendIcon } from "./BackendIcon";
-import { CounsellorAvatar } from "./CounsellorAvatar";
-import type { CounsellorSummary } from "../council-api";
+import { CouncilorAvatar } from "./CouncilorAvatar";
+import type { CouncilorSummary } from "../council-api";
 
-interface CounsellorCardProps {
-  counsellor: CounsellorSummary;
+interface CouncilorCardProps {
+  councilor: CouncilorSummary;
   issues: string[];
   onClick: () => void;
 }
@@ -20,12 +20,12 @@ function shortenPath(p: string): string {
   return p;
 }
 
-export function CounsellorCard({ counsellor, issues, onClick }: CounsellorCardProps) {
+export function CouncilorCard({ councilor, issues, onClick }: CouncilorCardProps) {
   const hasIssues = issues.length > 0;
 
   const openInFinder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.councilAPI.openInFinder(counsellor.dirPath);
+    window.councilAPI.openInFinder(councilor.dirPath);
   };
 
   return (
@@ -41,25 +41,25 @@ export function CounsellorCard({ counsellor, issues, onClick }: CounsellorCardPr
       <CardHeader className="pb-2">
         <button
           className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 font-mono truncate hover:text-muted-foreground transition-colors text-left"
-          title={`${counsellor.dirPath}\nClick to reveal in Finder`}
+          title={`${councilor.dirPath}\nClick to reveal in Finder`}
           onClick={openInFinder}
         >
           <Folder className="h-3 w-3 shrink-0" />
-          <span className="truncate">{shortenPath(counsellor.dirPath)}</span>
+          <span className="truncate">{shortenPath(councilor.dirPath)}</span>
         </button>
         <div className="flex items-start justify-between gap-2 mt-1">
           <div className="flex items-center gap-2">
-            <CounsellorAvatar name={counsellor.name} avatarUrl={counsellor.avatarUrl} size={48} />
-            <CardTitle className={cn(hasIssues && "text-destructive")}>{counsellor.name}</CardTitle>
-            {counsellor.source && (
+            <CouncilorAvatar name={councilor.name} avatarUrl={councilor.avatarUrl} size={48} />
+            <CardTitle className={cn(hasIssues && "text-destructive")}>{councilor.name}</CardTitle>
+            {councilor.source && (
               <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
-                {counsellor.source}
+                {councilor.source}
               </Badge>
             )}
           </div>
           {hasIssues && <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />}
         </div>
-        <CardDescription>{counsellor.description}</CardDescription>
+        <CardDescription>{councilor.description}</CardDescription>
       </CardHeader>
       <CardContent>
         {hasIssues && (
@@ -73,17 +73,17 @@ export function CounsellorCard({ counsellor, issues, onClick }: CounsellorCardPr
           </div>
         )}
         <div className="flex flex-wrap gap-1.5 mb-3">
-          {counsellor.interests.map((tag) => (
+          {councilor.interests.map((tag) => (
             <Badge key={tag} variant="secondary" className="text-[11px] font-normal">
               {tag}
             </Badge>
           ))}
         </div>
         <p className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
-          <BackendIcon backend={counsellor.backend} size={14} />
-          {counsellor.backend}
-          {counsellor.model ? ` · ${counsellor.model}` : ""}
-          {counsellor.temperature != null ? ` · t=${counsellor.temperature}` : ""}
+          <BackendIcon backend={councilor.backend} size={14} />
+          {councilor.backend}
+          {councilor.model ? ` · ${councilor.model}` : ""}
+          {councilor.temperature != null ? ` · t=${councilor.temperature}` : ""}
         </p>
       </CardContent>
     </Card>

@@ -93,8 +93,8 @@ export function DiscussionFeed({ turns, streamingContent = {}, mode, roundSummar
           key={`streaming-${name}`}
           turn={{
             round: 0,
-            counsellorId: name,
-            counsellorName: name,
+            councilorId: name,
+            councilorName: name,
             content,
             timestamp: "",
             model: "",

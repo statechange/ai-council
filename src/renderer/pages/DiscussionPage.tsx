@@ -10,18 +10,18 @@ import { DiscussionFeed } from "../components/DiscussionFeed";
 import { StatusBar } from "../components/StatusBar";
 import { useDiscussion } from "../hooks/useDiscussion";
 import { ExcalidrawDiagram } from "../components/ExcalidrawDiagram";
-import { CounsellorAvatar } from "../components/CounsellorAvatar";
+import { CouncilorAvatar } from "../components/CouncilorAvatar";
 import { BackendIcon } from "../components/BackendIcon";
-import { getCounsellorIssues } from "../lib/counsellor-issues";
+import { getCouncilorIssues } from "../lib/councilor-issues";
 import { cn } from "../lib/utils";
-import type { CounsellorSummary } from "../council-api";
+import type { CouncilorSummary } from "../council-api";
 import type { CouncilConfig } from "../../types";
 
 export function DiscussionPage() {
   const [topic, setTopic] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [rounds, setRounds] = useState(2);
-  const [counsellors, setCounsellors] = useState<CounsellorSummary[]>([]);
+  const [councilors, setCouncilors] = useState<CouncilorSummary[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [injectText, setInjectText] = useState("");
   const [config, setConfig] = useState<CouncilConfig>({ backends: {} });
@@ -43,21 +43,21 @@ export function DiscussionPage() {
       window.councilAPI.getConfig(),
     ]).then(([dir, configResult]) => {
       setCouncilDir(dir);
-      return window.councilAPI.listCounsellors(dir).then((list) => [list, configResult] as const);
+      return window.councilAPI.listCouncilors(dir).then((list) => [list, configResult] as const);
     }).then(([list, configResult]) => {
-      setCounsellors(list);
+      setCouncilors(list);
       setConfig(configResult.config);
       setEnvStatus(configResult.envStatus);
 
       // Compute issues
       const issues: Record<string, string[]> = {};
       for (const c of list) {
-        issues[c.id] = getCounsellorIssues(c, configResult.config, configResult.envStatus);
+        issues[c.id] = getCouncilorIssues(c, configResult.config, configResult.envStatus);
       }
       setIssueMap(issues);
 
-      // Restore saved counsellor selection or default to all healthy
-      const savedIds = configResult.config.defaults?.counsellorIds;
+      // Restore saved councilor selection or default to all healthy
+      const savedIds = configResult.config.defaults?.councilorIds;
       if (savedIds?.length) {
         // Only select saved IDs that still exist and are healthy
         const validSaved = new Set(savedIds.filter((id: string) => issues[id]?.length === 0));
@@ -94,7 +94,7 @@ export function DiscussionPage() {
       ...config,
       defaults: {
         ...config.defaults,
-        counsellorIds: Array.from(selectedIds),
+        councilorIds: Array.from(selectedIds),
         infographicBackends: Array.from(selectedInfographics) as ("openai" | "google")[],
         mode,
       },
@@ -106,7 +106,7 @@ export function DiscussionPage() {
       topic: fullTopic,
       topicSource: "inline",
       councilDir,
-      counsellorIds: selectedIds.size === counsellors.length ? undefined : Array.from(selectedIds),
+      councilorIds: selectedIds.size === councilors.length ? undefined : Array.from(selectedIds),
       rounds,
       infographicBackends: selectedInfographics.size > 0 ? Array.from(selectedInfographics) : undefined,
       mode,
@@ -151,7 +151,7 @@ export function DiscussionPage() {
       topic: continuePrompt.trim(),
       topicSource: "inline",
       councilDir,
-      counsellorIds: selectedIds.size === counsellors.length ? undefined : Array.from(selectedIds),
+      councilorIds: selectedIds.size === councilors.length ? undefined : Array.from(selectedIds),
       rounds: continueRounds,
       infographicBackends: selectedInfographics.size > 0 ? Array.from(selectedInfographics) : undefined,
       previousTurns: discussion.result.turns,
@@ -161,8 +161,8 @@ export function DiscussionPage() {
     setContinuePrompt("");
   };
 
-  const toggleCounsellor = (id: string) => {
-    // Don't allow toggling counsellors with issues
+  const toggleCouncilor = (id: string) => {
+    // Don't allow toggling councilors with issues
     if ((issueMap[id] || []).length > 0) return;
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -207,9 +207,9 @@ export function DiscussionPage() {
         />
 
         <div className="flex items-center gap-4 flex-wrap">
-          {/* Counsellor chips */}
+          {/* Councilor chips */}
           <div className="flex items-center gap-2 flex-wrap">
-            {counsellors.map((c) => {
+            {councilors.map((c) => {
               const issues = issueMap[c.id] || [];
               const hasIssues = issues.length > 0;
               const selected = selectedIds.has(c.id);
@@ -218,7 +218,7 @@ export function DiscussionPage() {
               return (
                 <div key={c.id} className="relative group">
                   <button
-                    onClick={() => toggleCounsellor(c.id)}
+                    onClick={() => toggleCouncilor(c.id)}
                     disabled={disabled}
                     title={hasIssues ? issues[0] : undefined}
                     className={cn(
@@ -233,7 +233,7 @@ export function DiscussionPage() {
                   >
                     {hasIssues && <AlertTriangle className="h-3 w-3" />}
                     {!hasIssues && (
-                      <CounsellorAvatar name={c.name} avatarUrl={c.avatarUrl} size={16} />
+                      <CouncilorAvatar name={c.name} avatarUrl={c.avatarUrl} size={16} />
                     )}
                     {c.name}
                   </button>
@@ -253,8 +253,8 @@ export function DiscussionPage() {
           <div className="flex items-center gap-2 ml-auto">
             {/* Mode toggle chips */}
             {([
-              { key: "freeform" as const, label: "Freeform", tip: "Open group chat \u2014 every counsellor sees the full conversation history on every turn" },
-              { key: "debate" as const, label: "Debate", tip: "Structured argument \u2014 round 1 is constructive (each counsellor argues blind), then rebuttal rounds see only the constructives + previous round. Speaker order is shuffled each round with interim summaries." },
+              { key: "freeform" as const, label: "Freeform", tip: "Open group chat \u2014 every councilor sees the full conversation history on every turn" },
+              { key: "debate" as const, label: "Debate", tip: "Structured argument \u2014 round 1 is constructive (each councilor argues blind), then rebuttal rounds see only the constructives + previous round. Speaker order is shuffled each round with interim summaries." },
             ]).map((m) => (
               <button
                 key={m.key}

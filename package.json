@@ -1,7 +1,7 @@
 {
   "name": "@statechange/council",
-  "version": "0.6.0",
-  "description": "CLI + GUI for orchestrating round-robin AI counsellor discussions with structured debate and freeform modes",
+  "version": "0.7.0",
+  "description": "CLI + GUI for orchestrating round-robin AI councilor discussions with structured debate and freeform modes",
   "type": "module",
   "license": "MIT",
   "main": "dist-electron/main.js",

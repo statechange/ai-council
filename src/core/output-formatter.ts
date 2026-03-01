@@ -8,7 +8,7 @@ function toMarkdown(result: ConversationResult): string {
 
   lines.push(`# Council Discussion: ${result.topic.slice(0, 100)}`);
   lines.push("");
-  lines.push(`**Counsellors:** ${result.counsellors.map((c) => c.name).join(", ")}`);
+  lines.push(`**Councilors:** ${result.councilors.map((c) => c.name).join(", ")}`);
   lines.push(`**Rounds:** ${result.rounds} | **Date:** ${date}`);
   lines.push("");
 
@@ -22,7 +22,7 @@ function toMarkdown(result: ConversationResult): string {
       lines.push("");
     }
 
-    lines.push(`### ${turn.counsellorName}`);
+    lines.push(`### ${turn.councilorName}`);
     lines.push(`*${turn.backend}/${turn.model}*`);
     lines.push("");
     lines.push(turn.content);

@@ -16,14 +16,14 @@ import type { ConversationResult, CouncilConfig } from "../../types";
 
 function formatShareMarkdown(detail: ConversationResult): string {
   const title = detail.title ?? detail.topic;
-  const counsellorNames = detail.counsellors.map((c) => c.name).join(", ");
+  const councilorNames = detail.councilors.map((c) => c.name).join(", ");
   const date = new Date(detail.startedAt).toLocaleString();
 
   const lines: string[] = [];
   lines.push(`# ${title}`);
   lines.push("");
   lines.push(`**Prompt:** ${detail.topic}`);
-  lines.push(`**Counsellors:** ${counsellorNames}`);
+  lines.push(`**Councilors:** ${councilorNames}`);
   lines.push(`**Date:** ${date}`);
   lines.push("");
   lines.push("---");
@@ -36,7 +36,7 @@ function formatShareMarkdown(detail: ConversationResult): string {
       lines.push(`## Round ${currentRound}`);
     }
     lines.push("");
-    lines.push(`### ${turn.counsellorName}`);
+    lines.push(`### ${turn.councilorName}`);
     lines.push(turn.content);
   }
 
@@ -101,8 +101,8 @@ export function HistoryPage() {
       // Avatars are nice-to-have — don't block navigation if this fails
       try {
         const dir = await window.councilAPI.getCouncilDir();
-        const counsellors = await window.councilAPI.listCounsellors(dir);
-        setAvatarMap(Object.fromEntries(counsellors.map(c => [c.name, c.avatarUrl])));
+        const councilors = await window.councilAPI.listCouncilors(dir);
+        setAvatarMap(Object.fromEntries(councilors.map(c => [c.name, c.avatarUrl])));
       } catch {
         /* avatar lookup failed — detail view still works */
       }
@@ -154,7 +154,7 @@ export function HistoryPage() {
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold truncate">{detail.title ?? detail.topic}</h2>
             <p className="text-xs text-muted-foreground">
-              {new Date(detail.startedAt).toLocaleString()} — {detail.counsellors.map(c => c.name).join(", ")}
+              {new Date(detail.startedAt).toLocaleString()} — {detail.councilors.map(c => c.name).join(", ")}
             </p>
           </div>
           {/* TODO: Share button should also offer "Post to URL" for shareable links. Deferred. */}
@@ -215,7 +215,7 @@ export function HistoryPage() {
           <DiscussionFeed
             turns={detail.turns.map(t => ({
               ...t,
-              avatarUrl: avatarMap[t.counsellorName] ?? t.avatarUrl,
+              avatarUrl: avatarMap[t.councilorName] ?? t.avatarUrl,
             }))}
             mode={detail.mode}
             roundSummaries={detail.roundSummaries}
@@ -421,7 +421,7 @@ export function HistoryPage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Users className="h-3 w-3" />
-                    {entry.counsellors.join(", ")}
+                    {entry.councilors.join(", ")}
                   </div>
                   <Badge variant="secondary" className="text-xs">
                     {entry.rounds} round{entry.rounds > 1 ? "s" : ""}

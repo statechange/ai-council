@@ -2,15 +2,15 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, FolderPlus, AlertTriangle, Search } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { CounsellorCard } from "../components/CounsellorCard";
-import { CounsellorForm } from "../components/CounsellorForm";
-import { AddCounsellorDialog } from "../components/AddCounsellorDialog";
-import { getCounsellorIssues } from "../lib/counsellor-issues";
-import type { CounsellorSummary } from "../council-api";
+import { CouncilorCard } from "../components/CouncilorCard";
+import { CouncilorForm } from "../components/CouncilorForm";
+import { AddCouncilorDialog } from "../components/AddCouncilorDialog";
+import { getCouncilorIssues } from "../lib/councilor-issues";
+import type { CouncilorSummary } from "../council-api";
 import type { CouncilConfig } from "../../types";
 
-export function CounsellorsPage() {
-  const [counsellors, setCounsellors] = useState<CounsellorSummary[]>([]);
+export function CouncilorsPage() {
+  const [councilors, setCouncilors] = useState<CouncilorSummary[]>([]);
   const [config, setConfig] = useState<CouncilConfig>({ backends: {} });
   const [envStatus, setEnvStatus] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<{ dirPath: string | null; isNew: boolean } | null>(null);
@@ -22,10 +22,10 @@ export function CounsellorsPage() {
     const dir = await window.councilAPI.getCouncilDir();
     setCouncilDir(dir);
     const [list, configResult] = await Promise.all([
-      window.councilAPI.listCounsellors(dir),
+      window.councilAPI.listCouncilors(dir),
       window.councilAPI.getConfig(),
     ]);
-    setCounsellors(list);
+    setCouncilors(list);
     setConfig(configResult.config);
     setEnvStatus(configResult.envStatus);
   }, []);
@@ -34,21 +34,21 @@ export function CounsellorsPage() {
 
   const handleSave = async (dirPath: string | null, id: string, aboutMd: string) => {
     if (editing?.isNew) {
-      await window.councilAPI.createCounsellor(councilDir, id, aboutMd);
+      await window.councilAPI.createCouncilor(councilDir, id, aboutMd);
     } else if (dirPath) {
-      await window.councilAPI.saveCounsellor(dirPath, aboutMd);
+      await window.councilAPI.saveCouncilor(dirPath, aboutMd);
     }
     setEditing(null);
     reload();
   };
 
   const handleDelete = async (dirPath: string) => {
-    // Check if this is a registered counsellor — unregister instead of deleting
-    const c = counsellors.find((x) => x.dirPath === dirPath);
+    // Check if this is a registered councilor — unregister instead of deleting
+    const c = councilors.find((x) => x.dirPath === dirPath);
     if (c?.source) {
       await window.councilAPI.registryRemove(c.id, c.source === "git");
     } else {
-      await window.councilAPI.deleteCounsellor(dirPath);
+      await window.councilAPI.deleteCouncilor(dirPath);
     }
     setEditing(null);
     reload();
@@ -57,7 +57,7 @@ export function CounsellorsPage() {
   // Detail view — full page
   if (editing) {
     return (
-      <CounsellorForm
+      <CouncilorForm
         dirPath={editing.dirPath}
         isNew={editing.isNew}
         onSave={handleSave}
@@ -68,27 +68,27 @@ export function CounsellorsPage() {
   }
 
   // List view
-  const issueCount = counsellors.reduce(
-    (sum, c) => sum + getCounsellorIssues(c, config, envStatus).length, 0,
+  const issueCount = councilors.reduce(
+    (sum, c) => sum + getCouncilorIssues(c, config, envStatus).length, 0,
   );
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return counsellors;
+    if (!search.trim()) return councilors;
     const q = search.toLowerCase();
-    return counsellors.filter(
+    return councilors.filter(
       (c) =>
         c.id.toLowerCase().includes(q) ||
         c.name.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q),
     );
-  }, [counsellors, search]);
+  }, [councilors, search]);
 
   return (
     <div className="flex flex-col h-full">
       <div className="shrink-0 p-6 pb-0 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Counsellors</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Councilors</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your council members</p>
           </div>
           <div className="flex items-center gap-3">
@@ -100,11 +100,11 @@ export function CounsellorsPage() {
             )}
             <Button variant="outline" onClick={() => setShowAddDialog(true)} className="gap-2">
               <FolderPlus className="h-4 w-4" />
-              Add Counsellor
+              Add Councilor
             </Button>
             <Button onClick={() => setEditing({ dirPath: null, isNew: true })} className="gap-2">
               <Plus className="h-4 w-4" />
-              New Counsellor
+              New Councilor
             </Button>
           </div>
         </div>
@@ -121,25 +121,25 @@ export function CounsellorsPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 pt-4">
-        {counsellors.length === 0 ? (
+        {councilors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/50 gap-2">
-            <p className="text-sm">No counsellors found in {councilDir}/</p>
+            <p className="text-sm">No councilors found in {councilDir}/</p>
             <Button variant="outline" size="sm" onClick={() => setEditing({ dirPath: null, isNew: true })}>
-              Create your first counsellor
+              Create your first councilor
             </Button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/50 gap-2">
             <Search className="h-8 w-8" />
-            <p className="text-sm">No counsellors match "{search}"</p>
+            <p className="text-sm">No councilors match "{search}"</p>
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-3">
             {filtered.map((c) => (
-              <CounsellorCard
+              <CouncilorCard
                 key={c.id}
-                counsellor={c}
-                issues={getCounsellorIssues(c, config, envStatus)}
+                councilor={c}
+                issues={getCouncilorIssues(c, config, envStatus)}
                 onClick={() => setEditing({ dirPath: c.dirPath, isNew: false })}
               />
             ))}
@@ -148,7 +148,7 @@ export function CounsellorsPage() {
       </div>
 
       {showAddDialog && (
-        <AddCounsellorDialog
+        <AddCouncilorDialog
           onClose={() => setShowAddDialog(false)}
           onAdded={() => { reload(); }}
         />

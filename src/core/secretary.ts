@@ -14,10 +14,10 @@ const DEFAULT_SYSTEM_PROMPT = `You are the Secretary of a council discussion. Yo
 Structure your summary with these sections:
 
 ## Individual Positions
-Briefly summarize each counsellor's key arguments and stance.
+Briefly summarize each councilor's key arguments and stance.
 
 ## Points of Convergence
-Where did the counsellors agree? What common ground emerged?
+Where did the councilors agree? What common ground emerged?
 
 ## Points of Divergence
 Where did they disagree? What are the key tensions?
@@ -30,7 +30,7 @@ Be concise but thorough. Use markdown formatting.`;
 function buildTranscript(result: ConversationResult): string {
   const lines: string[] = [];
   lines.push(`Topic: ${result.topic}`);
-  lines.push(`Counsellors: ${result.counsellors.map(c => c.name).join(", ")}`);
+  lines.push(`Councilors: ${result.councilors.map(c => c.name).join(", ")}`);
   lines.push(`Rounds: ${result.rounds}`);
   lines.push("");
 
@@ -41,7 +41,7 @@ function buildTranscript(result: ConversationResult): string {
       lines.push(`--- Round ${currentRound} ---`);
       lines.push("");
     }
-    lines.push(`[${turn.counsellorName}]:`);
+    lines.push(`[${turn.councilorName}]:`);
     lines.push(turn.content);
     lines.push("");
   }
@@ -74,7 +74,7 @@ export async function runSecretary({
 
 ${cheatsheet}
 
-After your text summary, output \`${EXCALIDRAW_DELIMITER}\` on its own line, then a JSON array of Excalidraw elements showing a visual map of where each counsellor stands on the topic. Use shapes for each counsellor with their name, arrows to show relationships (agreement/disagreement), and position them to visually represent the discussion dynamics.`;
+After your text summary, output \`${EXCALIDRAW_DELIMITER}\` on its own line, then a JSON array of Excalidraw elements showing a visual map of where each councilor stands on the topic. Use shapes for each councilor with their name, arrows to show relationships (agreement/disagreement), and position them to visually represent the discussion dynamics.`;
 
   const transcript = buildTranscript(result);
 
@@ -155,7 +155,7 @@ export async function runInterimSummary({
   lines.push(`Round ${roundNumber}${roundNumber === 1 ? " (Constructive)" : " (Rebuttal)"}`);
   lines.push("");
   for (const turn of roundTurns) {
-    lines.push(`[${turn.counsellorName}]:`);
+    lines.push(`[${turn.councilorName}]:`);
     lines.push(turn.content);
     lines.push("");
   }
@@ -204,7 +204,7 @@ export async function generateTitle({
   const model = secretaryConfig.model ?? backend.defaultModel;
 
   const turnsSummary = firstRoundTurns
-    .map((t) => `[${t.counsellorName}]: ${t.content.slice(0, 300)}`)
+    .map((t) => `[${t.councilorName}]: ${t.content.slice(0, 300)}`)
     .join("\n\n");
 
   const response = await backend.chat({

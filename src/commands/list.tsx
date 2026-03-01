@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text } from "ink";
-import { loadCounsellors } from "../core/counsellor-loader.js";
-import { getRegisteredPaths } from "../core/counsellor-registry.js";
+import { loadCouncilors } from "../core/councilor-loader.js";
+import { getRegisteredPaths } from "../core/councilor-registry.js";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import type { Counsellor, CouncilConfig } from "../types.js";
+import type { Councilor, CouncilConfig } from "../types.js";
 
 interface Props {
   councilDir: string;
 }
 
 export function ListCommand({ councilDir }: Props) {
-  const [counsellors, setCounsellors] = useState<Counsellor[]>([]);
+  const [councilors, setCouncilors] = useState<Councilor[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,11 +23,11 @@ export function ListCommand({ councilDir }: Props) {
         config = JSON.parse(await readFile(join(homedir(), ".ai-council", "config.json"), "utf-8"));
       } catch { /* no config */ }
       const paths = getRegisteredPaths(config);
-      return loadCounsellors(councilDir, paths);
+      return loadCouncilors(councilDir, paths);
     }
     load()
       .then((c) => {
-        setCounsellors(c);
+        setCouncilors(c);
         setLoading(false);
       })
       .catch((err) => {
@@ -36,7 +36,7 @@ export function ListCommand({ councilDir }: Props) {
       });
   }, []);
 
-  if (loading) return <Text>Loading counsellors...</Text>;
+  if (loading) return <Text>Loading councilors...</Text>;
 
   if (error) {
     return <Text color="red">Error: {error}</Text>;
@@ -45,10 +45,10 @@ export function ListCommand({ councilDir }: Props) {
   return (
     <Box flexDirection="column" paddingY={1}>
       <Text bold>
-        Available Counsellors ({counsellors.length}) from {councilDir}
+        Available Councilors ({councilors.length}) from {councilDir}
       </Text>
       <Text> </Text>
-      {counsellors.map((c) => (
+      {councilors.map((c) => (
         <Box key={c.id} flexDirection="column" marginBottom={1}>
           <Text>
             <Text bold color="cyan">

@@ -1,27 +1,27 @@
 # AI Council
 
-A CLI + Electron GUI for orchestrating round-robin AI counsellor discussions.
+A CLI + Electron GUI for orchestrating round-robin AI councilor discussions.
 
 ## Project Structure
 
-- `src/core/` — Core modules (no UI dependencies): conversation engine, counsellor loader, key scanner
+- `src/core/` — Core modules (no UI dependencies): conversation engine, councilor loader, key scanner
 - `src/backends/` — LLM backend providers: anthropic, openai, google, ollama
 - `src/commands/` — CLI commands (React/Ink components): discuss, list, config
 - `src/electron/` — Electron main process, preload, IPC handlers
 - `src/renderer/` — React GUI (Tailwind + shadcn, built with Vite)
-- `council/` — Sample counsellor definitions (ABOUT.md with YAML frontmatter)
+- `council/` — Sample councilor definitions (ABOUT.md with YAML frontmatter)
 
 ## Key Files
 
 - `~/.ai-council/config.json` — User config (API keys, base URLs per backend)
-- `council/*/ABOUT.md` — Counsellor definitions (frontmatter: name, backend, model, temperature, interests)
+- `council/*/ABOUT.md` — Councilor definitions (frontmatter: name, backend, model, temperature, interests)
 
 ## Commands
 
 ```bash
 # CLI
 bun run dev -- discuss "topic"        # Run a discussion
-bun run dev -- list                   # List counsellors
+bun run dev -- list                   # List councilors
 bun run dev -- config show            # Show config status
 bun run dev -- config scan [paths..]  # Scan for API keys
 bun run dev -- config import          # Import found keys to config
