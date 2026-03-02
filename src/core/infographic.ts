@@ -38,7 +38,7 @@ async function generateViaOpenAI(prompt: string, config: CouncilConfig): Promise
   });
 
   const response = await client.images.generate({
-    model: "gpt-image-1",
+    model: "gpt-image-1.5",
     prompt,
     quality: "high",
     size: "1536x1024",
@@ -56,7 +56,7 @@ async function generateViaGoogle(prompt: string, config: CouncilConfig): Promise
 
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-image-preview",
+    model: "gemini-3.1-flash-image-preview",
     contents: prompt,
     config: {
       responseModalities: ["IMAGE", "TEXT"],

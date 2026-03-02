@@ -117,6 +117,7 @@ export interface CouncilConfig {
     infographicBackends?: ("openai" | "google")[];
     mode?: "freeform" | "debate";
   };
+  onboardingComplete?: boolean;
 }
 
 export type ConversationEvent =
