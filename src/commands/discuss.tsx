@@ -13,6 +13,7 @@ import { saveToHistory } from "../core/history.js";
 import { runSecretary } from "../core/secretary.js";
 import { generateInfographic } from "../core/infographic.js";
 import { log } from "../core/logger.js";
+import { enrichTopic } from "../core/topic-enricher.js";
 import type { ConversationEvent, ConversationTurn, CouncilConfig } from "../types.js";
 
 interface Props {
@@ -59,6 +60,9 @@ export function DiscussCommand({
           resolvedTopic = await readFile(topic, "utf-8");
           topicSource = "file";
         }
+        // Enrich topic with any URLs found
+        setStatus("Checking for links...");
+        resolvedTopic = await enrichTopic(resolvedTopic, undefined, setStatus);
 
         // Load config and councilors
         let cfg: CouncilConfig = { backends: {} };

@@ -18,6 +18,7 @@ import { saveToHistory, listHistory, getHistoryEntry, deleteHistoryEntry, addInf
 import { runSecretary, generateTitle } from "../core/secretary.js";
 import { generateInfographic, hasImageBackend } from "../core/infographic.js";
 import { log } from "../core/logger.js";
+import { enrichTopic } from "../core/topic-enricher.js";
 import type { ConversationTurn, ConversationResult, CouncilConfig, BackendConfig, ConversationEvent } from "../types.js";
 
 // Load dotenv for API keys
@@ -301,9 +302,12 @@ export function registerIpcHandlers(
       };
     };
 
+    // Enrich topic with any URLs found
+    const enrichedTopic = await enrichTopic(params.topic, activeAbortController.signal);
+
     const isContinuation = !!(params.previousTurns?.length);
     const opts: RunConversationOptions = {
-      topic: params.topic,
+      topic: enrichedTopic,
       topicSource: params.topicSource,
       councilors,
       rounds: params.rounds,
