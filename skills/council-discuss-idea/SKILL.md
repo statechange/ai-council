@@ -1,114 +1,132 @@
 ---
 name: council-discuss-idea
-description: Use the AI Council to discuss, evaluate, or brainstorm an idea. Runs a multi-round council discussion with relevant councilors and returns a synthesis. Use when the user wants expert perspectives on an idea, strategy, architecture, or business problem.
+description: Run a council discussion on any topic, idea, or URL. Automatically selects relevant councilors from those installed, runs a multi-round debate, and returns only the summary. Full transcript is saved to a temp file for optional deep-dive. Use when you need expert perspectives on a strategy, architecture, product, or business problem.
 license: MIT
 metadata:
   author: ai-council
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Council Discuss Idea
 
-Orchestrate a full AI Council discussion to evaluate, brainstorm, or stress-test an idea.
+Run a focused council discussion and return a clean summary. The full debate transcript is saved to a temp file — not loaded into context — so the caller can grep it if needed.
 
-## Installation
+## Prerequisites
 
-If `council` is not already installed:
+Council CLI must be installed. If `council` is not found:
 
 ```bash
 npm install -g @statechange/council
 ```
 
-## When to Use
-
-- The user has an idea they want multiple expert perspectives on
-- The user wants to evaluate a business strategy, product concept, or technical architecture
-- The user says "let's discuss this," "what do the councilors think," or "run this by the council"
-- The user wants to brainstorm or stress-test a proposal
-
-## How to Run a Discussion
-
-### Step 1: Identify the Topic
-
-Extract the core idea or question from what the user said. Frame it as a clear, specific topic that will generate useful discussion. If the topic is vague, ask the user to clarify before proceeding.
-
-### Step 2: Choose Councilors
-
-First, list available councilors:
+A secretary backend must be configured (it produces the summary). Check with:
 
 ```bash
-council list
+council config show
 ```
 
-Select councilors relevant to the topic. Use the `--councilors` flag to filter. Guidelines:
+## Procedure
 
-- **Business/strategy topics**: daniel-priestley, marc-andreessen, chan-kim, michael-gerber, russell-brunson, gregor-hohpe
-- **Technical/architecture topics**: neal-ford, sam-newman, chip-huyen, zhamak-dehghani, gregor-hohpe
-- **Marketing/growth topics**: daniel-priestley, russell-brunson, chan-kim, marshall-mcluhan
-- **Learning/education topics**: seymour-papert, chip-huyen, marshall-mcluhan
-- **General/broad topics**: Use the starter council (strategist, creative, critic) plus 2-3 relevant author councilors
-- **Mix perspectives**: Always include at least one councilor who will challenge the idea (e.g., the critic, sam-newman for pragmatism, marc-andreessen for market reality)
+### Step 1: Discover Available Councilors
 
-Pick 3-5 councilors for a focused discussion, up to 7 for a broad one.
+```bash
+council list 2>/dev/null | grep -E '^\w|^  Backend|^  Interests'
+```
+
+Parse the output to get councilor IDs and their interests/descriptions. Only use councilors that are actually listed — do not assume any are available.
+
+### Step 2: Select Councilors for the Topic
+
+Based on the topic and each councilor's listed interests/description, pick 3-5 councilors that are most relevant. Guidelines:
+
+- **Always include diverse perspectives** — at least one who will naturally challenge the idea
+- **Match by interests** — the councilor list shows each one's interests, use those to match
+- **Prefer fewer, more relevant councilors** over many loosely related ones
+- **3-5 is ideal** — enough for cross-pollination, not so many it dilutes focus
 
 ### Step 3: Run the Discussion
 
 ```bash
-council discuss "YOUR TOPIC HERE" --councilors id1,id2,id3 --rounds 2
+council discuss "THE TOPIC OR QUESTION" \
+  --councilors id1,id2,id3,id4 \
+  --rounds 2 \
+  --format json \
+  --output /tmp/council-discussions \
+  2>&1
 ```
 
-Parameters:
-- **Topic**: A clear question or statement. Enclose in quotes.
-- **--councilors**: Comma-separated councilor IDs (from `council list`)
-- **--rounds**: Number of discussion rounds (default 2). Use 1 for quick takes, 2-3 for depth.
-- **--mode debate**: Use debate mode when you want councilors to explicitly challenge each other
+**Important notes:**
+- The topic can include URLs — they will be automatically fetched and included as context
+- Use `--rounds 2` for good depth (round 1 = initial takes, round 2 = cross-pollination)
+- Use `--format json` so the full structured output is saved
+- Use `--output /tmp/council-discussions` to keep transcripts in a predictable location
+- The CLI streams output to stderr while running — capture both stdout and stderr
 
-### Step 4: Present the Results
+### Step 4: Extract the Summary
 
-After the discussion completes, you'll get:
-- Individual turns from each councilor across all rounds
-- A secretary summary (if configured) with convergence, divergence, and synthesis
-
-Present the results to the user:
-1. **Lead with the synthesis** — what did the council agree on? Where did they diverge?
-2. **Highlight the most interesting individual perspectives** — especially surprising or contrarian takes
-3. **Extract actionable insights** — what should the user actually do based on this discussion?
-4. **Offer to go deeper** — "Want me to run another round focusing on X?" or "Should I get the council's take on a specific aspect?"
-
-### Step 5: Continue if Needed
-
-If the user wants to explore further:
+The JSON output file contains the full discussion. Extract just the summary:
 
 ```bash
-council discuss "FOLLOW-UP TOPIC" --councilors id1,id2,id3 --rounds 1 --continue PREVIOUS_HISTORY_ID
+# Find the most recent output file
+TRANSCRIPT=$(ls -t /tmp/council-discussions/council-*.json 2>/dev/null | head -1)
+
+# Extract the summary (the secretary's synthesis)
+cat "$TRANSCRIPT" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+summary = data.get('summary', '')
+if summary:
+    print(summary)
+else:
+    # No secretary summary — fall back to last round turns
+    for turn in data.get('turns', []):
+        if turn['round'] == data.get('rounds', 1):
+            print(f\"**{turn['councilorName']}**: {turn['content']}\n\")
+"
 ```
 
-The `--continue` flag carries forward context from the previous discussion.
+### Step 5: Return Results to the Caller
 
-## Example Workflows
+Present to the user:
 
-### Evaluating a Product Idea
+1. **The summary** — this is the primary output. It contains convergence, divergence, and synthesis.
+2. **The transcript path** — mention it so the user (or agent) can dive deeper: "Full transcript saved to `{TRANSCRIPT}`"
+3. **Brief councilor attribution** — which councilors participated (names only)
+
+**Do NOT** dump the full transcript into the response. The whole point is keeping context clean.
+
+If the user wants to explore a specific councilor's take or a specific point of contention, THEN grep the transcript file:
 
 ```bash
-council discuss "Should we build an AI-powered code review tool that focuses on security vulnerabilities? Our target market is mid-size engineering teams (50-200 developers) who don't have dedicated security engineers." --councilors marc-andreessen,chip-huyen,neal-ford,daniel-priestley,chan-kim --rounds 2
+# Find what a specific councilor said
+grep -A 50 '"councilorName": "Neal Ford"' "$TRANSCRIPT"
+
+# Or read the full markdown for human consumption
+cat /tmp/council-discussions/council-*.md | head -200
 ```
 
-### Stress-Testing a Technical Architecture
+## Example
+
+User says: "What do you think about building a SaaS that helps restaurants manage food waste using computer vision?"
 
 ```bash
-council discuss "We're considering migrating our monolithic e-commerce platform to microservices. We have 12 developers and ship weekly. Is this the right move?" --councilors neal-ford,sam-newman,gregor-hohpe,zhamak-dehghani --rounds 2 --mode debate
+# Step 1: Check who's available
+council list 2>/dev/null | grep -E '^\w'
+
+# Step 2: Pick relevant councilors (suppose we found these)
+# marc-andreessen (market/startups), chip-huyen (AI/CV), daniel-priestley (business model), chan-kim (market creation), critic (stress test)
+
+# Step 3: Run it
+council discuss "Should we build a SaaS that helps restaurants manage food waste using computer vision? The idea is to use cameras in kitchens to identify and quantify food waste, then provide actionable insights to reduce it. Target market is mid-to-large restaurant chains (50+ locations)." \
+  --councilors marc-andreessen,chip-huyen,daniel-priestley,chan-kim,critic \
+  --rounds 2 \
+  --format json \
+  --output /tmp/council-discussions \
+  2>&1
+
+# Step 4: Get the summary
+TRANSCRIPT=$(ls -t /tmp/council-discussions/council-*.json | head -1)
+python3 -c "import json; d=json.load(open('$TRANSCRIPT')); print(d.get('summary','No summary generated'))"
 ```
 
-### Brainstorming a Go-to-Market Strategy
-
-```bash
-council discuss "We have a developer tool with 500 free users but almost no paid conversions. How do we build a path to revenue?" --councilors russell-brunson,daniel-priestley,marc-andreessen,chan-kim,michael-gerber --rounds 2
-```
-
-## Tips
-
-- Frame topics as specific questions or scenarios, not vague themes
-- Include context: team size, stage, constraints, what you've already tried
-- Use debate mode when you want friction and challenge
-- 2 rounds is the sweet spot: round 1 for initial perspectives, round 2 for cross-pollination
-- If the discussion reveals a clear tension, run a follow-up focused on that specific tension
+Then respond with the summary + transcript path.
