@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk } from "./types.js";
+import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk, ModelInfo } from "./types.js";
 
 export function createOpenAIBackend(config: BackendConfig): BackendProvider {
   const client = new OpenAI({
@@ -63,6 +63,18 @@ export function createOpenAIBackend(config: BackendConfig): BackendProvider {
           };
         }
       }
+    },
+
+    async listModels(): Promise<ModelInfo[]> {
+      const response = await client.models.list();
+      const models: ModelInfo[] = [];
+      for await (const model of response) {
+        models.push({
+          id: model.id,
+          created: new Date(model.created * 1000).toISOString(),
+        });
+      }
+      return models.sort((a, b) => a.id.localeCompare(b.id));
     },
   };
 }

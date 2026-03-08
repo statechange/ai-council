@@ -1,5 +1,5 @@
 import { Ollama } from "ollama";
-import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk } from "./types.js";
+import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk, ModelInfo } from "./types.js";
 
 export function createOllamaBackend(config: BackendConfig): BackendProvider {
   const client = new Ollama({
@@ -73,6 +73,17 @@ export function createOllamaBackend(config: BackendConfig): BackendProvider {
             ? { input: promptEvalCount ?? 0, output: evalCount ?? 0 }
             : undefined,
       };
+    },
+
+    async listModels(): Promise<ModelInfo[]> {
+      const response = await client.list();
+      return response.models
+        .map((m) => ({
+          id: m.name,
+          name: m.name,
+          created: m.modified_at?.toString(),
+        }))
+        .sort((a, b) => a.id.localeCompare(b.id));
     },
   };
 }

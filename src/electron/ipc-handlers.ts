@@ -228,6 +228,18 @@ export function registerIpcHandlers(
     return probeBackend(name, config);
   });
 
+  ipcMain.handle("backend:models", async (_event, backendName: string) => {
+    try {
+      const { getBackend } = await import("../backends/index.js");
+      const backend = await getBackend(backendName);
+      if (!backend.listModels) return { models: [], error: "Not supported" };
+      const models = await backend.listModels();
+      return { models };
+    } catch (err) {
+      return { models: [], error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
   ipcMain.handle("config:save", async (_event, config: CouncilConfig) => {
     const configDir = join(homedir(), ".ai-council");
     await mkdir(configDir, { recursive: true });

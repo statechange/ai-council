@@ -63,6 +63,13 @@ council history        # List past discussions
 council history <id>   # View a specific discussion
 ```
 
+### Browse available models
+
+```bash
+council models                         # List models for all backends
+council models google                  # List models for a specific backend
+```
+
 ### Configure backends
 
 ```bash
@@ -140,19 +147,26 @@ Enable post-discussion summaries (and debate interim summaries) by adding a `sec
   "backends": { "..." : "..." },
   "secretary": {
     "backend": "anthropic",
-    "model": "claude-sonnet-4-5-20250929"
+    "model": "claude-sonnet-4-6"
   }
 }
 ```
 
 ### Supported Backends
 
-| Backend | Default Model | API Key |
-|---------|--------------|---------|
-| anthropic | claude-sonnet-4-5-20250929 | `ANTHROPIC_API_KEY` |
-| openai | gpt-4o | `OPENAI_API_KEY` |
-| google | gemini-2.0-flash | `GOOGLE_API_KEY` |
-| ollama | llama3.2 | None (local) |
+| Backend | API Key | Example Models |
+|---------|---------|----------------|
+| anthropic | `ANTHROPIC_API_KEY` | All Claude models (Opus, Sonnet, Haiku) |
+| openai | `OPENAI_API_KEY` | All GPT and o-series models |
+| google | `GOOGLE_API_KEY` | All Gemini models (Pro, Flash, Flash-Lite) |
+| ollama | None (local) | Any model you've pulled locally |
+
+Each backend supports all current models from its provider. List available models with:
+
+```bash
+council models              # All backends
+council models anthropic    # Just one
+```
 
 ## Creating Councilors
 
@@ -173,7 +187,7 @@ name: "The Strategist"
 description: "Thinks in systems, moats, and long-term positioning"
 interests: ["strategy", "markets", "competition"]
 backend: "anthropic"
-model: "claude-sonnet-4-5-20250929"
+model: "claude-sonnet-4-6"
 temperature: 0.7
 avatar: "avatar.jpg"
 ---

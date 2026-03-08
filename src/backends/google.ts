@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk } from "./types.js";
+import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk, ModelInfo } from "./types.js";
 
 export function createGoogleBackend(config: BackendConfig): BackendProvider {
   const apiKey = config.apiKey ?? process.env.GOOGLE_API_KEY ?? "";
@@ -74,6 +74,24 @@ export function createGoogleBackend(config: BackendConfig): BackendProvider {
             }
           : undefined,
       };
+    },
+
+    async listModels(): Promise<ModelInfo[]> {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=100`,
+      );
+      if (!response.ok) throw new Error(`Google API error: ${response.status}`);
+      const data = (await response.json()) as {
+        models: Array<{ name: string; displayName: string; description: string }>;
+      };
+      return (data.models || [])
+        .filter((m) => m.name.startsWith("models/gemini"))
+        .map((m) => ({
+          id: m.name.replace("models/", ""),
+          name: m.displayName,
+          description: m.description,
+        }))
+        .sort((a, b) => a.id.localeCompare(b.id));
     },
   };
 }

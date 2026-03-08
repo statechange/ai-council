@@ -80,11 +80,19 @@ export interface ChatStreamChunk {
   tokenUsage?: { input: number; output: number };
 }
 
+export interface ModelInfo {
+  id: string;
+  name?: string;
+  description?: string;
+  created?: string;
+}
+
 export interface BackendProvider {
   name: string;
   defaultModel: string;
   chat(request: ChatRequest): Promise<ChatResponse>;
   chatStream?(request: ChatRequest): AsyncIterable<ChatStreamChunk>;
+  listModels?(): Promise<ModelInfo[]>;
 }
 
 export interface BackendConfig {

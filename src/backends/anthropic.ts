@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk } from "./types.js";
+import type { BackendProvider, BackendConfig, ChatRequest, ChatResponse, ChatStreamChunk, ModelInfo } from "./types.js";
 
 export function createAnthropicBackend(config: BackendConfig): BackendProvider {
   const client = new Anthropic({
@@ -9,7 +9,7 @@ export function createAnthropicBackend(config: BackendConfig): BackendProvider {
 
   return {
     name: "anthropic",
-    defaultModel: "claude-sonnet-4-5-20250929",
+    defaultModel: "claude-sonnet-4-6",
 
     async chat(request: ChatRequest): Promise<ChatResponse> {
       const response = await client.messages.create({
@@ -59,6 +59,18 @@ export function createAnthropicBackend(config: BackendConfig): BackendProvider {
           output: finalMessage.usage.output_tokens,
         },
       };
+    },
+
+    async listModels(): Promise<ModelInfo[]> {
+      const models: ModelInfo[] = [];
+      for await (const page of client.models.list({ limit: 100 })) {
+        models.push({
+          id: page.id,
+          name: page.display_name,
+          created: page.created_at,
+        });
+      }
+      return models.sort((a, b) => a.id.localeCompare(b.id));
     },
   };
 }

@@ -28,6 +28,9 @@ const councilAPI = {
   probeBackend: (name: string, config: { apiKey?: string; baseUrl?: string }) =>
     ipcRenderer.invoke("backend:probe", name, config),
 
+  listModels: (backend: string) =>
+    ipcRenderer.invoke("backend:models", backend),
+
   startDiscussion: (params: {
     topic: string;
     topicSource: "inline" | "file";
