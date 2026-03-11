@@ -13,6 +13,7 @@ import {
   removeCouncilor,
 } from "../core/councilor-registry.js";
 import { runConversation, type RunConversationOptions } from "../core/conversation-engine.js";
+import { preflightCheck } from "../core/preflight.js";
 import { clearCaches } from "../backends/index.js";
 import { saveToHistory, listHistory, getHistoryEntry, deleteHistoryEntry, addInfographicToHistory, deleteInfographicFromHistory } from "../core/history.js";
 import { runSecretary, generateTitle } from "../core/secretary.js";
@@ -289,14 +290,41 @@ export function registerIpcHandlers(
     const registeredPaths = getRegisteredPaths(config);
     log.info("ipc:discussion", `Loading councilors from ${params.councilDir} + ${registeredPaths.length} registered paths`);
     const allCouncilors = await loadCouncilors(params.councilDir, registeredPaths);
-    const councilors = params.councilorIds?.length
+    const selectedCouncilors = params.councilorIds?.length
       ? allCouncilors.filter((c) => params.councilorIds!.includes(c.id))
       : allCouncilors;
 
-    log.info("ipc:discussion", `Resolved ${councilors.length} councilors: ${councilors.map(c => c.id).join(", ")}`);
+    log.info("ipc:discussion", `Resolved ${selectedCouncilors.length} councilors: ${selectedCouncilors.map(c => c.id).join(", ")}`);
 
-    if (councilors.length === 0) {
+    if (selectedCouncilors.length === 0) {
       send({ type: "error", councilorName: "", error: "No councilors found" });
+      return;
+    }
+
+    // Pre-flight validation: check backends and models
+    send({ type: "preflight_start" } as any);
+    const preflight = await preflightCheck(selectedCouncilors, (msg) => {
+      send({ type: "preflight_status", message: msg } as any);
+    });
+
+    if (preflight.invalid.length > 0) {
+      for (const r of preflight.invalid) {
+        log.warn("ipc:discussion", `Preflight failed for ${r.councilor.frontmatter.name}: ${r.issues.join("; ")}`);
+        send({
+          type: "preflight_fail",
+          councilorName: r.councilor.frontmatter.name,
+          councilorId: r.councilor.id,
+          model: r.model,
+          issues: r.issues,
+        } as any);
+      }
+    }
+
+    send({ type: "preflight_complete", valid: preflight.valid.length, invalid: preflight.invalid.length } as any);
+
+    const councilors = preflight.valid;
+    if (councilors.length === 0) {
+      send({ type: "error", councilorName: "", error: "No councilors passed pre-flight validation. Check backend API keys and model names." });
       return;
     }
 

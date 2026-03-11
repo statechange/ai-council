@@ -54,20 +54,7 @@ export function CouncilorsPage() {
     reload();
   };
 
-  // Detail view — full page
-  if (editing) {
-    return (
-      <CouncilorForm
-        dirPath={editing.dirPath}
-        isNew={editing.isNew}
-        onSave={handleSave}
-        onDelete={handleDelete}
-        onClose={() => setEditing(null)}
-      />
-    );
-  }
-
-  // List view
+  // Hooks must be called unconditionally (before any early returns)
   const issueCount = councilors.reduce(
     (sum, c) => sum + getCouncilorIssues(c, config, envStatus).length, 0,
   );
@@ -82,6 +69,21 @@ export function CouncilorsPage() {
         c.description.toLowerCase().includes(q),
     );
   }, [councilors, search]);
+
+  // Detail view — full page
+  if (editing) {
+    return (
+      <CouncilorForm
+        dirPath={editing.dirPath}
+        isNew={editing.isNew}
+        onSave={handleSave}
+        onDelete={handleDelete}
+        onClose={() => setEditing(null)}
+      />
+    );
+  }
+
+  // List view
 
   return (
     <div className="flex flex-col h-full">

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Markdown } from "./Markdown";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, AlertTriangle } from "lucide-react";
 import { cn } from "../lib/utils";
 import { CouncilorAvatar } from "./CouncilorAvatar";
 import type { ConversationTurn } from "../../types";
@@ -54,22 +54,31 @@ export function TurnBubble({ turn, streaming }: TurnBubbleProps) {
           </span>
         )}
       </div>
-      <div
-        className={cn(
-          "relative rounded-lg border px-4 py-3 text-sm leading-relaxed prose-council",
-          isUser ? "bg-accent/50 border-border" : "bg-card border-border",
-        )}
-      >
-        <button
-          onClick={handleCopy}
-          className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground"
-          title="Copy to clipboard"
+      {turn.error ? (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>{turn.error}</span>
+          </div>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "relative rounded-lg border px-4 py-3 text-sm leading-relaxed prose-council",
+            isUser ? "bg-accent/50 border-border" : "bg-card border-border",
+          )}
         >
-          {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-        </button>
-        <Markdown>{turn.content}</Markdown>
-        {streaming && <span className="inline-block w-2 h-4 ml-0.5 bg-current animate-pulse rounded-sm" />}
-      </div>
+          <button
+            onClick={handleCopy}
+            className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground"
+            title="Copy to clipboard"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+          <Markdown>{turn.content}</Markdown>
+          {streaming && <span className="inline-block w-2 h-4 ml-0.5 bg-current animate-pulse rounded-sm" />}
+        </div>
+      )}
     </div>
   );
 }

@@ -336,6 +336,21 @@ export function DiscussionPage() {
 
       {/* Feed */}
       <div className="flex-1 overflow-y-auto">
+        {/* Preflight warnings */}
+        {discussion.preflightFailures.length > 0 && (
+          <div className="mx-4 mt-3 px-3 py-2 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 font-medium text-yellow-500">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Skipped {discussion.preflightFailures.length} councilor{discussion.preflightFailures.length > 1 ? "s" : ""} (failed pre-flight check)
+            </div>
+            {discussion.preflightFailures.map((f) => (
+              <div key={f.councilorId} className="text-yellow-500/80 pl-5">
+                {f.councilorName} ({f.model}): {f.issues.join("; ")}
+              </div>
+            ))}
+          </div>
+        )}
+
         <DiscussionFeed
           turns={discussion.turns}
           streamingContent={discussion.streamingContent}

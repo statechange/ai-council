@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ConversationTurn, ConversationResult } from "../../types";
 import type { DiscussionEvent } from "../council-api";
 
+export interface PreflightFailure {
+  councilorName: string;
+  councilorId: string;
+  model: string;
+  issues: string[];
+}
+
 export interface DiscussionState {
   isRunning: boolean;
   turns: ConversationTurn[];
@@ -21,6 +28,8 @@ export interface DiscussionState {
   infographicError: string | null;
   roundSummaries: Record<number, string>;
   activeRoundSummary: { round: number; content: string } | null;
+  preflightStatus: "idle" | "running" | "complete";
+  preflightFailures: PreflightFailure[];
 }
 
 export function useDiscussion() {
@@ -43,6 +52,8 @@ export function useDiscussion() {
     infographicError: null,
     roundSummaries: {},
     activeRoundSummary: null,
+    preflightStatus: "idle",
+    preflightFailures: [],
   });
 
   const unsubRef = useRef<(() => void) | null>(null);
@@ -84,12 +95,30 @@ export function useDiscussion() {
       infographicError: null,
       roundSummaries: {},
       activeRoundSummary: null,
+      preflightStatus: "idle",
+      preflightFailures: [],
     });
 
     unsubRef.current?.();
     unsubRef.current = window.councilAPI.onDiscussionEvent((event: DiscussionEvent) => {
       setState((prev) => {
         switch (event.type) {
+          case "preflight_start":
+            return { ...prev, preflightStatus: "running" };
+          case "preflight_fail": {
+            const evt = event as any;
+            return {
+              ...prev,
+              preflightFailures: [...prev.preflightFailures, {
+                councilorName: evt.councilorName,
+                councilorId: evt.councilorId,
+                model: evt.model,
+                issues: evt.issues,
+              }],
+            };
+          }
+          case "preflight_complete":
+            return { ...prev, preflightStatus: "complete" };
           case "turn_start": {
             const sc = { ...prev.streamingContent };
             sc[event.councilorName] = "";

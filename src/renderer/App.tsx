@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { WelcomeWizard } from "./components/WelcomeWizard";
 import { DiscussionPage } from "./pages/DiscussionPage";
 import { CouncilorsPage } from "./pages/CouncilorsPage";
@@ -46,10 +47,12 @@ export function App() {
     <div className="flex h-screen bg-background">
       <Sidebar currentPage={page} onNavigate={setPage} />
       <main className="flex-1 overflow-hidden">
-        {page === "discussion" && <DiscussionPage />}
-        {page === "history" && <HistoryPage />}
-        {page === "councilors" && <CouncilorsPage />}
-        {page === "settings" && <SettingsPage />}
+        <ErrorBoundary key={page} onReset={() => setPage(page)}>
+          {page === "discussion" && <DiscussionPage />}
+          {page === "history" && <HistoryPage />}
+          {page === "councilors" && <CouncilorsPage />}
+          {page === "settings" && <SettingsPage />}
+        </ErrorBoundary>
       </main>
     </div>
   );

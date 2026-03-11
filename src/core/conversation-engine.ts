@@ -287,6 +287,22 @@ export async function runConversation(
         const message = err instanceof Error ? err.message : String(err);
         log.error("conversation", `Turn failed for ${councilor.frontmatter.name} (round ${round}, model ${councilor.frontmatter.model ?? "default"}, backend ${councilor.frontmatter.backend})`, err);
         opts.onEvent({ type: "error", councilorName: councilor.frontmatter.name, error: message });
+
+        // Emit a turn_complete with the error as content so the UI can
+        // clean up the streaming bubble and show the failure inline.
+        const errorTurn: ConversationTurn = {
+          round: displayRound,
+          councilorId: councilor.id,
+          councilorName: councilor.frontmatter.name,
+          content: "",
+          timestamp: new Date().toISOString(),
+          model: councilor.frontmatter.model ?? "default",
+          backend: councilor.frontmatter.backend,
+          avatarUrl: councilor.avatarUrl,
+          error: message,
+        };
+        turns.push(errorTurn);
+        opts.onEvent({ type: "turn_complete", turn: errorTurn });
       }
     }
 

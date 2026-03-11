@@ -13,6 +13,7 @@ import { HistoryCommand } from "./commands/history.js";
 import { GuiCommand } from "./commands/gui.js";
 import { InstallCommand } from "./commands/install.js";
 import { ModelsCommand } from "./commands/models.js";
+import { UpdateCommand } from "./commands/update.js";
 
 const cli = meow(
   `
@@ -28,6 +29,7 @@ const cli = meow(
     councilor remove <id>        Unregister a councilor (--yes to delete cloned files)
     councilor list               List all registered councilors
     models [backend]       List available models (all backends, or specify one)
+    update                 Update council to the latest version
     gui                    Launch the Electron GUI
     install                Install AI Council as a macOS application
     install --uninstall    Remove AI Council from Applications
@@ -184,6 +186,11 @@ switch (command) {
   case "install":
     render(<InstallCommand uninstall={cli.flags.uninstall} />);
     break;
+
+  case "update": {
+    render(<UpdateCommand />);
+    break;
+  }
 
   case "models": {
     const backendName = cli.input[1];

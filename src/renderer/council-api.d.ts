@@ -33,6 +33,10 @@ export interface CouncilorDetail {
 export type DiscussionEvent =
   | ConversationEvent
   | { type: "complete"; result: ConversationResult }
+  | { type: "preflight_start" }
+  | { type: "preflight_status"; message: string }
+  | { type: "preflight_fail"; councilorName: string; councilorId: string; model: string; issues: string[] }
+  | { type: "preflight_complete"; valid: number; invalid: number }
   | { type: "summary_start" }
   | { type: "summary_chunk"; delta: string }
   | { type: "summary_complete"; summary: string; diagram?: unknown[] }

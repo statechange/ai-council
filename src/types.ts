@@ -31,6 +31,8 @@ export interface ConversationTurn {
   backend: string;
   tokenUsage?: { input: number; output: number };
   avatarUrl?: string;
+  /** Set when the turn failed (e.g. invalid model, network error) */
+  error?: string;
 }
 
 export interface ConversationResult {

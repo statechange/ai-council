@@ -12,6 +12,7 @@ import { writeOutput } from "../core/output-formatter.js";
 import { saveToHistory } from "../core/history.js";
 import { runSecretary } from "../core/secretary.js";
 import { generateInfographic } from "../core/infographic.js";
+import { preflightCheck } from "../core/preflight.js";
 import { log } from "../core/logger.js";
 import { enrichTopic } from "../core/topic-enricher.js";
 import type { ConversationEvent, ConversationTurn, CouncilConfig } from "../types.js";
@@ -49,6 +50,7 @@ export function DiscussCommand({
   const [infographicSaved, setInfographicSaved] = useState(false);
   const [roundSummaries, setRoundSummaries] = useState<Record<number, string>>({});
   const [activeRoundSummary, setActiveRoundSummary] = useState<string>("");
+  const [preflightIssues, setPreflightIssues] = useState<string[]>([]);
 
   useEffect(() => {
     async function run() {
@@ -74,9 +76,27 @@ export function DiscussCommand({
           registeredPaths = getRegisteredPaths(cfg);
         } catch { /* no config */ }
 
-        const councilors = councilorPaths?.length
+        const allCouncilors = councilorPaths?.length
           ? await loadSpecificCouncilors(councilorPaths)
           : await loadCouncilors(councilDir, registeredPaths);
+
+        // Pre-flight check: validate backends and models
+        setStatus("Validating councilors...");
+        const preflight = await preflightCheck(allCouncilors, setStatus);
+
+        if (preflight.invalid.length > 0) {
+          const issues = preflight.invalid.map(
+            (r) => `  ${r.councilor.frontmatter.name}: ${r.issues.join("; ")}`,
+          );
+          setPreflightIssues(issues);
+          log.warn("cli:discuss", `Preflight: ${preflight.invalid.length} councilor(s) have issues`, issues);
+        }
+
+        const councilors = preflight.valid;
+        if (councilors.length === 0) {
+          setError("No councilors passed pre-flight validation. Check backend API keys and model names.");
+          return;
+        }
 
         setStatus(
           `Starting ${mode === "debate" ? "debate" : "discussion"} with ${councilors.length} councilor${councilors.length > 1 ? "s" : ""} over ${rounds} round${rounds > 1 ? "s" : ""}`,
@@ -176,9 +196,19 @@ export function DiscussCommand({
     run();
   }, []);
 
+  const preflightWarnings = preflightIssues.length > 0 ? (
+    <Box flexDirection="column" marginBottom={1}>
+      <Text color="yellow" bold>Skipped {preflightIssues.length} councilor{preflightIssues.length > 1 ? "s" : ""} (failed pre-flight):</Text>
+      {preflightIssues.map((issue, i) => (
+        <Text key={i} color="yellow">{issue}</Text>
+      ))}
+    </Box>
+  ) : null;
+
   if (error) {
     return (
       <Box flexDirection="column">
+        {preflightWarnings}
         <Text color="red">Error: {error}</Text>
       </Box>
     );
@@ -187,6 +217,7 @@ export function DiscussCommand({
   if (done) {
     return (
       <Box flexDirection="column" paddingY={1}>
+        {preflightWarnings}
         <Text color="green">Discussion complete!</Text>
         <Text>
           {completedTurns.length} turns across {currentRound} round
@@ -236,8 +267,8 @@ export function DiscussCommand({
       {completedTurns.length > 0 && (
         <Box flexDirection="column" marginTop={1}>
           {completedTurns.slice(-3).map((turn, i) => (
-            <Text key={i} dimColor>
-              Round {turn.round} — {turn.councilorName}: {turn.content.slice(0, 80)}...
+            <Text key={i} dimColor color={turn.error ? "red" : undefined}>
+              Round {turn.round} — {turn.councilorName}: {turn.error ? `[Error: ${turn.error.slice(0, 60)}]` : `${turn.content.slice(0, 80)}...`}
             </Text>
           ))}
         </Box>
